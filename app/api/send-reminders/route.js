@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
-import * as Brevo from '@getbrevo/brevo'
+const SibApiV3Sdk = require('@getbrevo/brevo')
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SECRET_KEY
 )
 
-const brevoClient = new Brevo.TransactionalEmailsApi()
-brevoClient.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
+const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi()
+brevoClient.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
 
 const sendEmails = async (assignments, subjectPrefix, messageLine, students) => {
   for (const assignment of assignments) {
@@ -26,7 +26,7 @@ const sendEmails = async (assignments, subjectPrefix, messageLine, students) => 
           '<br/>' +
           '<p>-- ClassFlow</p>'
 
-        const sendSmtpEmail = new Brevo.SendSmtpEmail()
+       const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail()
         sendSmtpEmail.subject = subjectPrefix + ' - ' + assignment.assignment_title
         sendSmtpEmail.htmlContent = emailHtml
         sendSmtpEmail.sender = { name: 'ClassFlow', email: 'akoredeayomide099@gmail.com' }
