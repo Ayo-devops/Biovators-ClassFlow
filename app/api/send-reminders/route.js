@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
-const SibApiV3Sdk = require('@getbrevo/brevo')
+import { BrevoClient } from '@getbrevo/brevo'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SECRET_KEY
 )
 
-const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi()
-brevoClient.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY })
 
 const sendEmails = async (assignments, subjectPrefix, messageLine, students) => {
   for (const assignment of assignments) {
@@ -26,15 +25,14 @@ const sendEmails = async (assignments, subjectPrefix, messageLine, students) => 
           '<br/>' +
           '<p>-- ClassFlow</p>'
 
-       const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail()
-        sendSmtpEmail.subject = subjectPrefix + ' - ' + assignment.assignment_title
-        sendSmtpEmail.htmlContent = emailHtml
-        sendSmtpEmail.sender = { name: 'ClassFlow', email: 'akoredeayomide099@gmail.com' }
-        sendSmtpEmail.to = [{ email: student.student_email, name: student.student_name }]
-
-        await brevoClient.sendTransacEmail(sendSmtpEmail)
+        await brevo.transactionalEmails.sendTransacEmail({
+          sender: { name: 'ClassFlow', email: 'akoredeayomide099@gmail.com' },
+          to: [{ email: student.student_email, name: student.student_name }],
+          subject: subjectPrefix + ' - ' + assignment.assignment_title,
+          htmlContent: emailHtml
+        })
       } catch (emailError) {
-        console.log('Email error:', emailError)
+        console.log('Email error:', emailError.message)
       }
     }
   }
@@ -50,27 +48,22 @@ export async function GET() {
   const in3Days = new Date(today)
   in3Days.setDate(today.getDate() + 3)
 
-  const { data: students } = await supabase
-    .from('students')
-    .select('*')
+  const { data: students } = await supabase.from('students').select('*')
 
   if (!students || students.length === 0) {
     return Response.json({ message: 'No students found' })
   }
 
   const { data: todayAssignments } = await supabase
-    .from('assignments')
-    .select('*')
+    .from('assignments').select('*')
     .eq('deadline_date', today.toISOString().split('T')[0])
 
   const { data: oneDayAssignments } = await supabase
-    .from('assignments')
-    .select('*')
+    .from('assignments').select('*')
     .eq('deadline_date', in1Day.toISOString().split('T')[0])
 
   const { data: threeDayAssignments } = await supabase
-    .from('assignments')
-    .select('*')
+    .from('assignments').select('*')
     .eq('deadline_date', in3Days.toISOString().split('T')[0])
 
   await sendEmails(todayAssignments || [], '[ClassFlow] Due Today', 'Today is the deadline. Submit before it is too late.', students)
@@ -78,7 +71,7 @@ export async function GET() {
   await sendEmails(threeDayAssignments || [], '[ClassFlow] Due in 3 Days', 'This assignment is due in 3 days. Start early.', students)
 
   return Response.json({
-    message: 'Reminders sent successfully',
+    message: 'Reminders sent',
     breakdown: {
       today: todayAssignments?.length || 0,
       tomorrow: oneDayAssignments?.length || 0,

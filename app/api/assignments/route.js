@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
-const SibApiV3Sdk = require('@getbrevo/brevo')
+import { BrevoClient } from '@getbrevo/brevo'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SECRET_KEY
 )
 
-const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi()
-brevoClient.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY })
 
 export async function GET() {
   const { data, error } = await supabase
@@ -29,17 +28,13 @@ export async function POST(request) {
       .select()
       .single()
 
-    if (error) {
-      return Response.json({ error }, { status: 500 })
-    }
+    if (error) return Response.json({ error }, { status: 500 })
 
     const { data: students, error: studentsError } = await supabase
       .from('students')
       .select('*')
 
-    if (studentsError) {
-      return Response.json({ error: studentsError }, { status: 500 })
-    }
+    if (studentsError) return Response.json({ error: studentsError }, { status: 500 })
 
     for (const student of students) {
       try {
@@ -56,16 +51,15 @@ export async function POST(request) {
           '<br/>' +
           '<p>-- ClassFlow</p>'
 
-       const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail()
-        sendSmtpEmail.subject = '[ClassFlow] New Assignment - ' + assignment.assignment_title
-        sendSmtpEmail.htmlContent = emailHtml
-        sendSmtpEmail.sender = { name: 'ClassFlow', email: 'akoredeayomide099@gmail.com' }
-        sendSmtpEmail.to = [{ email: student.student_email, name: student.student_name }]
-
-        const result = await brevoClient.sendTransacEmail(sendSmtpEmail)
-        console.log('Brevo result:', JSON.stringify(result))
+        await brevo.transactionalEmails.sendTransacEmail({
+          sender: { name: 'ClassFlow', email: 'akoredeayomide099@gmail.com' },
+          to: [{ email: student.student_email, name: student.student_name }],
+          subject: '[ClassFlow] New Assignment - ' + assignment.assignment_title,
+          htmlContent: emailHtml
+        })
+        console.log('Email sent to:', student.student_email)
       } catch (emailError) {
-        console.log('Email error:', emailError)
+        console.log('Email error:', emailError.message)
       }
     }
 
