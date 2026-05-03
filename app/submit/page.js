@@ -2,6 +2,8 @@
 import { useState } from 'react'
 
 export default function SubmitAssignment() {
+  const [unlocked, setUnlocked] = useState(false)
+  const [password, setPassword] = useState('')
   const [form, setForm] = useState({
     course_title: '',
     assignment_title: '',
@@ -14,6 +16,8 @@ export default function SubmitAssignment() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
+
+  const correctPassword = 'classflow2026'
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -48,11 +52,40 @@ export default function SubmitAssignment() {
     setLoading(false)
   }
 
+  if (!unlocked) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-8">
+        <div className="w-full max-w-sm text-center">
+          <h1 className="text-2xl font-bold mb-2">ClassFlow</h1>
+          <p className="text-slate-400 text-sm mb-8">Rep access only</p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-green-400 mb-4"
+            placeholder="Enter password"
+          />
+          <button
+            onClick={() => {
+              if (password === correctPassword) {
+                setUnlocked(true)
+              } else {
+                alert('Wrong password')
+              }
+            }}
+            className="w-full bg-green-400 text-black font-bold py-3 rounded text-sm tracking-widest uppercase hover:bg-white transition-colors"
+          >
+            Enter
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-xl mx-auto">
-        
-        {/* Header */}
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">ClassFlow</h1>
           <p className="text-slate-400 text-sm mt-1">Submit a new assignment</p>
@@ -60,13 +93,13 @@ export default function SubmitAssignment() {
 
         {success && (
           <div className="bg-green-900/30 border border-green-500 text-green-400 px-4 py-3 rounded mb-6 text-sm">
-            ✅ Assignment submitted successfully. Emails are being sent to all students.
+            Assignment submitted successfully. Emails are being sent to all students.
           </div>
         )}
 
         {error && (
           <div className="bg-red-900/30 border border-red-500 text-red-400 px-4 py-3 rounded mb-6 text-sm">
-            ❌ {error}
+            {error}
           </div>
         )}
 
