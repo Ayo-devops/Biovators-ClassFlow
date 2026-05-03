@@ -58,6 +58,7 @@ for (const student of students) {
       '<p><b>Deadline:</b> ' + assignment.deadline_date + '</p>' +
       '<p><b>Submission Method:</b> ' + assignment.submission_method + '</p>' +
       '<p><b>Priority:</b> ' + assignment.priority + '</p>' +
+      (assignment.description ? '<p><b>Description:</b> ' + assignment.description + '</p>' : '') +
       '<br/>' +
       '<p>-- ClassFlow</p>'
 
