@@ -21,7 +21,7 @@ const sendEmails = async (assignments, subjectPrefix, messageLine, students) => 
           '<p><b>Deadline:</b> ' + assignment.deadline_date + '</p>' +
           '<p><b>Submission Method:</b> ' + assignment.submission_method + '</p>' +
           '<p><b>Priority:</b> ' + assignment.priority + '</p>' +
-          (assignment.description ? '<p><b>Description:</b> ' + assignment.description + '</p>' : '') +
+          (assignment.description ? '<p><b>Description:</b></p><p>' + assignment.description.replace(/\n/g, '<br/>') + '</p>' : '') + +
           '<br/>' +
           '<p>-- ClassFlow</p>'
 
