@@ -9,6 +9,7 @@ export default function AdminPanel() {
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [userRole, setUserRole] = useState(null)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -18,6 +19,7 @@ export default function AdminPanel() {
         return
       }
       setUser(session.user)
+      setUserRole(session.user.user_metadata?.role || 'admin')
 
       const [a, s, an] = await Promise.all([
         fetch('/api/assignments').then(r => r.json()),
@@ -66,8 +68,18 @@ export default function AdminPanel() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
             <p className="text-slate-400 text-sm mt-1">{user?.email}</p>
+            <p className="text-xs mt-1">
+              <span className={`px-2 py-0.5 rounded text-xs font-bold ${userRole === 'admin' ? 'bg-green-900/40 text-green-400' : 'bg-blue-900/40 text-blue-400'}`}>
+                {userRole === 'admin' ? 'Admin' : 'Course Rep'}
+              </span>
+            </p>
           </div>
           <div className="flex gap-3">
+            {userRole === 'admin' && (
+              <a href="/admin/invite" className="border border-green-800 text-green-400 px-4 py-2 rounded text-xs tracking-widest uppercase hover:bg-green-900/30 transition-colors">
+                Invite User
+              </a>
+            )}
             <a href="/" className="border border-slate-700 text-slate-300 px-4 py-2 rounded text-xs tracking-widest uppercase hover:border-green-400 hover:text-green-400 transition-colors">
               Dashboard
             </a>
@@ -111,22 +123,26 @@ export default function AdminPanel() {
 
         {/* Students Tab */}
         {activeTab === 'students' && (
-          <div className="space-y-2">
-            {students.map(s => (
-              <div key={s.id} className="flex items-center justify-between border border-slate-800 rounded px-4 py-3 hover:bg-slate-800/50">
-                <div>
-                  <p className="text-white text-sm font-medium">{s.student_name}</p>
-                  <p className="text-slate-400 text-xs">{s.student_email}</p>
+          userRole !== 'admin' ? (
+            <p className="text-red-400 text-sm">Access denied. Admins only.</p>
+          ) : (
+            <div className="space-y-2">
+              {students.map(s => (
+                <div key={s.id} className="flex items-center justify-between border border-slate-800 rounded px-4 py-3 hover:bg-slate-800/50">
+                  <div>
+                    <p className="text-white text-sm font-medium">{s.student_name}</p>
+                    <p className="text-slate-400 text-xs">{s.student_email}</p>
+                  </div>
+                  <button
+                    onClick={() => deleteStudent(s.id)}
+                    className="text-red-400 text-xs hover:text-red-300 transition-colors"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <button
-                  onClick={() => deleteStudent(s.id)}
-                  className="text-red-400 text-xs hover:text-red-300 transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         )}
 
         {/* Assignments Tab */}
