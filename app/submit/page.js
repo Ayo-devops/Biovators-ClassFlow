@@ -86,10 +86,13 @@ export default function SubmitAssignment() {
     <main className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-xl mx-auto">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">ClassFlow</h1>
-          <p className="text-slate-400 text-sm mt-1">Submit a new assignment</p>
-        </div>
+       <div className="mb-8">
+  <a href="/" className="inline-block text-slate-500 text-xs hover:text-slate-300 transition-colors mb-6">
+    ← Back to Dashboard
+  </a>
+  <h1 className="text-3xl font-bold tracking-tight">ClassFlow</h1>
+  <p className="text-slate-400 text-sm mt-1">Submit a new assignment</p>
+</div>
 
         {success && (
           <div className="bg-green-900/30 border border-green-500 text-green-400 px-4 py-3 rounded mb-6 text-sm">
