@@ -55,6 +55,7 @@ export default function Register() {
   }
 
   return (
+    
     <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-8">
       <div className="w-full max-w-md">
 
@@ -114,6 +115,9 @@ export default function Register() {
             <a href="/" className="text-slate-500 text-xs hover:text-slate-300 transition-colors">
               View Dashboard
             </a>
+            <a href="/" className="inline-block text-slate-500 text-xs hover:text-slate-300 transition-colors mb-6">
+  ← Back to Dashboard
+</a>
           </div>
 
         </div>

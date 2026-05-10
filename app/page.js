@@ -30,6 +30,19 @@ export default function Dashboard() {
     return 'text-green-400'
   }
 
+  const getStatus = (deadline) => {
+  const d = new Date(deadline)
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24))
+
+  if (diff < 0) return { label: 'Overdue', style: 'bg-red-900/40 text-red-400' }
+  if (diff === 0) return { label: 'Due Today', style: 'bg-orange-900/40 text-orange-400' }
+  if (diff <= 2) return { label: 'Urgent', style: 'bg-yellow-900/40 text-yellow-400' }
+  if (diff <= 7) return { label: 'This Week', style: 'bg-blue-900/40 text-blue-400' }
+  return { label: 'Upcoming', style: 'bg-green-900/40 text-green-400' }
+}
+
   const AssignmentTable = ({ data, emptyMsg }) => (
     data.length === 0
       ? <p className="text-slate-500 text-sm py-4">{emptyMsg}</p>
@@ -41,6 +54,7 @@ export default function Dashboard() {
               <th className="pb-2 pr-4">Deadline</th>
               <th className="pb-2 pr-4">Method</th>
               <th className="pb-2">Priority</th>
+              <th className="pb-2">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -51,6 +65,11 @@ export default function Dashboard() {
                 <td className="py-3 pr-4 text-slate-400">{a.deadline_date}</td>
                 <td className="py-3 pr-4 text-slate-400">{a.submission_method}</td>
                 <td className={`py-3 font-medium ${priorityColor(a.priority)}`}>{a.priority}</td>
+                <td className="py-3">
+  <span className={`text-xs font-bold px-2 py-1 rounded ${getStatus(a.deadline_date).style}`}>
+    {getStatus(a.deadline_date).label}
+  </span>
+</td>
               </tr>
             ))}
           </tbody>
