@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 export default function Dashboard() {
   const [assignments, setAssignments] = useState([])
+  const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
