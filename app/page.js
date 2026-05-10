@@ -59,6 +59,7 @@ export default function Dashboard() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white p-8">
+
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-center gap-2 mb-2">
@@ -67,6 +68,22 @@ export default function Dashboard() {
         </div>
         <h1 className="text-4xl font-bold tracking-tight">ClassFlow</h1>
         <p className="text-slate-400 mt-1 text-sm">Academic Deadline Tracker</p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-6 flex-wrap">
+          <a
+            href="/submit"
+            className="bg-green-400 text-black font-bold px-5 py-2 rounded text-xs tracking-widest uppercase hover:bg-white transition-colors"
+          >
+            Submit Assignment
+          </a>
+          <a
+            href="/register"
+            className="border border-slate-700 text-slate-300 font-bold px-5 py-2 rounded text-xs tracking-widest uppercase hover:border-green-400 hover:text-green-400 transition-colors"
+          >
+            Register for Emails
+          </a>
+        </div>
       </div>
 
       {loading ? (
