@@ -12,6 +12,9 @@ export default function Dashboard() {
         setAssignments(data)
         setLoading(false)
       })
+       fetch('/api/announcements')
+    .then(res => res.json())
+    .then(data => setAnnouncements(data))
   }, [])
 
   const today = new Date()
@@ -102,6 +105,12 @@ export default function Dashboard() {
           >
             Register for Emails
           </a>
+         
+         <a href="/announce"
+           className="border border-slate-700 text-slate-300 font-bold px-5 py-2 rounded text-xs tracking-widest uppercase hover:border-yellow-400 hover:text-yellow-400 transition-colors"
+          > 
+                Post Announcement
+            </a>
         </div>
       </div>
 
@@ -137,6 +146,26 @@ export default function Dashboard() {
             <AssignmentTable data={all} emptyMsg="No assignments yet." />
           </div>
 
+            {/* Announcements */}
+<div>
+  <h2 className="text-xs font-bold tracking-widest uppercase text-blue-400 mb-4 flex items-center gap-2">
+    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+    Announcements
+  </h2>
+  {announcements.length === 0 ? (
+    <p className="text-slate-500 text-sm py-4">No announcements yet.</p>
+  ) : (
+    <div className="space-y-4">
+      {announcements.map(a => (
+        <div key={a.id} className="border border-slate-800 rounded p-4 hover:bg-slate-800/50">
+          <p className="text-white font-medium mb-1">{a.title}</p>
+          <p className="text-slate-400 text-sm whitespace-pre-line">{a.body}</p>
+          <p className="text-slate-600 text-xs mt-2">Posted by {a.posted_by} · {new Date(a.created_at).toLocaleDateString()}</p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
         </div>
       )}
     </main>
