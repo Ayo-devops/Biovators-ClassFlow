@@ -5,7 +5,7 @@ export default function Register() {
   const [form, setForm] = useState({
     student_name: '',
     student_email: '',
-    phone_number: ''
+    whatsapp_number: ''
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -16,7 +16,7 @@ export default function Register() {
   }
 
   const handleSubmit = async () => {
-    if (!form.student_name || !form.student_email || !form.phone_number) {
+    if (!form.student_name || !form.student_email || !form.whatsapp_number) {
       setError('Please fill in all fields.')
       return
     }
@@ -100,10 +100,10 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="text-xs text-slate-400 uppercase tracking-widest block mb-1">Phone Number</label>
+            <label className="text-xs text-slate-400 uppercase tracking-widest block mb-1">WhatsApp Number</label>
             <input
-              name="phone_number"
-              value={form.phone_number}
+              name="whatsapp_number"
+              value={form.whatsapp_number}
               onChange={handleChange}
               className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-green-400"
               placeholder="e.g. 08012345678"
