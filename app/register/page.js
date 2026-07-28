@@ -4,7 +4,8 @@ import { useState } from 'react'
 export default function Register() {
   const [form, setForm] = useState({
     student_name: '',
-    student_email: ''
+    student_email: '',
+    phone_number: ''
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -15,8 +16,8 @@ export default function Register() {
   }
 
   const handleSubmit = async () => {
-    if (!form.student_name || !form.student_email) {
-      setError('Please fill in both fields.')
+    if (!form.student_name || !form.student_email || !form.phone_number) {
+      setError('Please fill in all fields.')
       return
     }
     setLoading(true)
@@ -45,7 +46,7 @@ export default function Register() {
         <div className="text-center">
           <div className="text-5xl mb-4">✅</div>
           <h2 className="text-xl font-bold mb-2">You are registered!</h2>
-          <p className="text-slate-400 text-sm">You will receive email reminders for all upcoming assignments automatically.</p>
+          <p className="text-slate-400 text-sm">You will receive email and WhatsApp reminders for all upcoming assignments automatically.</p>
           <a href="/" className="inline-block mt-6 text-green-400 text-sm border-b border-green-400">
             View Dashboard
           </a>
@@ -55,7 +56,6 @@ export default function Register() {
   }
 
   return (
-    
     <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-8">
       <div className="w-full max-w-md">
 
@@ -99,6 +99,17 @@ export default function Register() {
             />
           </div>
 
+          <div>
+            <label className="text-xs text-slate-400 uppercase tracking-widest block mb-1">Phone Number</label>
+            <input
+              name="phone_number"
+              value={form.phone_number}
+              onChange={handleChange}
+              className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-green-400"
+              placeholder="e.g. 08012345678"
+            />
+          </div>
+
           <button
             onClick={handleSubmit}
             disabled={loading}
@@ -108,16 +119,13 @@ export default function Register() {
           </button>
 
           <p className="text-center text-slate-600 text-xs mt-4">
-            By registering you will receive automated email reminders for all class assignments.
+            By registering you will receive automated email and WhatsApp reminders for all class assignments.
           </p>
 
           <div className="text-center mt-2">
             <a href="/" className="text-slate-500 text-xs hover:text-slate-300 transition-colors">
-              View Dashboard
+              Back to Dashboard
             </a>
-            <a href="/" className="inline-block text-slate-500 text-xs hover:text-slate-300 transition-colors mb-6">
-  ← Back to Dashboard
-</a>
           </div>
 
         </div>
