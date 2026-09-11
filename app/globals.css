@@ -958,8 +958,6 @@ button {
   font-weight: 600;
   color: #506747;
 }
-.field input,
-.field select,
 .password-input {
   position: relative;
 }
@@ -986,6 +984,8 @@ button {
 .password-input input::-ms-reveal {
   display: none;
 }
+.field input,
+.field select,
 .field textarea {
   width: 100%;
   min-height: 46px;
