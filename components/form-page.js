@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Icon from "./icon";
+import PasswordInput from "./password-input";
 export default function FormPage({
   title,
   description,
@@ -48,6 +49,8 @@ export function Field({ label, name, options, multiline, ...props }) {
         </select>
       ) : multiline ? (
         <textarea id={name} name={name} rows={4} {...props} />
+      ) : props.type === "password" ? (
+        <PasswordInput id={name} name={name} {...props} />
       ) : (
         <input id={name} name={name} {...props} />
       )}

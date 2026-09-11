@@ -960,6 +960,32 @@ button {
 }
 .field input,
 .field select,
+.password-input {
+  position: relative;
+}
+.field .password-input input {
+  padding-right: 52px;
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #596b53;
+}
+.password-toggle:hover {
+  background: #eaf1e7;
+}
+.password-input input::-ms-reveal {
+  display: none;
+}
 .field textarea {
   width: 100%;
   min-height: 46px;
