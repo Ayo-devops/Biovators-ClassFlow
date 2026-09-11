@@ -1,77 +1,77 @@
-'use client'
-import { useState } from 'react'
-import { supabase } from '../../../lib/supabase'
-
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase";
+import FormPage, { Field } from "../../../components/form-page";
+import Icon from "../../../components/icon";
 export default function AdminLogin() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-
-  const handleLogin = async () => {
-    setLoading(true)
-    setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      window.location.href = '/admin'
+  const router = useRouter();
+  const [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(false);
+  async function login(e) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      if (!supabase)
+        throw Error(
+          "Sign-in is not configured yet. Please contact your class administrator.",
+        );
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      router.replace("/admin");
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
     }
   }
-
   return (
-    <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-8">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="text-2xl font-bold mb-2">ClassFlow</h1>
-          <p className="text-slate-400 text-sm">Admin Access</p>
+    <FormPage
+      title="Welcome back, class leader."
+      description="A little behind-the-scenes care keeps the whole class moving. Sign in to your workspace."
+      icon="shield"
+    >
+      <h2>Sign in to ClassFlow</h2>
+      <p>For admins and course representatives.</p>
+      {error && (
+        <div role="alert" className="notice error">
+          {error}
         </div>
-
-        {error && (
-          <div className="bg-red-900/30 border border-red-500 text-red-400 px-4 py-3 rounded mb-6 text-sm">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs text-slate-400 uppercase tracking-widest block mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-green-400"
-              placeholder="admin@email.com"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs text-slate-400 uppercase tracking-widest block mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-3 text-sm text-white focus:outline-none focus:border-green-400"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-green-400 text-black font-bold py-3 rounded text-sm tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-
-          <div className="text-center mt-4">
-            <a href="/" className="text-slate-500 text-xs hover:text-slate-300 transition-colors">
-              Back to Dashboard
-            </a>
-          </div>
-        </div>
-      </div>
-    </main>
-  )
+      )}
+      <form onSubmit={login}>
+        <Field
+          label="Email address"
+          name="email"
+          type="email"
+          autoComplete="username"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <Field
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button className="button primary" disabled={loading}>
+          {loading ? "Signing in…" : "Sign in"}
+          <Icon name="arrow" size={17} />
+        </button>
+      </form>
+      <p className="form-caption">
+        Use the account provided by your class administrator.
+      </p>
+    </FormPage>
+  );
 }

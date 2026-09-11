@@ -1,194 +1,338 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
-
-export default function AdminPanel() {
-  const [user, setUser] = useState(null)
-  const [assignments, setAssignments] = useState([])
-  const [students, setStudents] = useState([])
-  const [announcements, setAnnouncements] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
-  const [userRole, setUserRole] = useState(null)
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        window.location.href = '/admin/login'
-        return
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+import Icon from "../../components/icon";
+import { formatDate } from "../../lib/deadlines";
+export default function Admin() {
+  const router = useRouter();
+  const [user, setUser] = useState(null),
+    [role, setRole] = useState(null),
+    [assignments, setAssignments] = useState([]),
+    [students, setStudents] = useState([]),
+    [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [tab, setTab] = useState("Overview"),
+    [query, setQuery] = useState(""),
+    [busy, setBusy] = useState(null);
+  const load = useCallback(async () => {
+    try {
+      if (!supabase) {
+        await Promise.resolve();
+        throw Error(
+          "Sign-in is not configured yet. Please contact your class administrator.",
+        );
       }
-      setUser(session.user)
-      setUserRole(session.user.user_metadata?.role || 'admin')
-
-      const [a, s, an] = await Promise.all([
-        fetch('/api/assignments').then(r => r.json()),
-        fetch('/api/students').then(r => r.json()),
-        fetch('/api/announcements').then(r => r.json())
-      ])
-      setAssignments(a)
-      setStudents(s)
-      setAnnouncements(an)
-      setLoading(false)
+      const {
+        data: { session },
+        error: authError,
+      } = await supabase.auth.getSession();
+      if (authError) throw authError;
+      if (!session) {
+        router.replace("/admin/login");
+        return;
+      }
+      setUser(session.user);
+      const r = session.user.user_metadata?.role || "rep";
+      setRole(r);
+      const urls = [
+        "/api/assignments",
+        "/api/announcements",
+        ...(r === "admin" ? ["/api/students"] : []),
+      ];
+      const data = await Promise.all(
+        urls.map(async (url) => {
+          const response = await fetch(url);
+          if (!response.ok)
+            throw Error("Could not load workspace data. Please try again.");
+          const json = await response.json();
+          if (!Array.isArray(json))
+            throw Error("Unexpected response. Please try again.");
+          return json;
+        }),
+      );
+      setAssignments(data[0]);
+      setAnnouncements(data[1]);
+      if (data[2]) setStudents(data[2]);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
     }
-    checkAuth()
-  }, [])
-
-  const deleteAssignment = async (id) => {
-    if (!confirm('Delete this assignment?')) return
-    await fetch(`/api/assignments/${id}`, { method: 'DELETE' })
-    setAssignments(assignments.filter(a => a.id !== id))
-  }
-
-  const deleteStudent = async (id) => {
-    if (!confirm('Remove this student?')) return
-    await fetch(`/api/students/${id}`, { method: 'DELETE' })
-    setStudents(students.filter(s => s.id !== id))
-  }
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/admin/login'
-  }
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <p className="text-slate-500">Loading admin panel...</p>
-      </main>
+  }, [router]);
+  useEffect(() => {
+    // Synchronize the workspace with the external auth session and API on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
+  async function remove(type, id) {
+    if (
+      !window.confirm(
+        type === "students"
+          ? "Remove this student from the reminder list?"
+          : "Delete this assignment?",
+      )
     )
+      return;
+    setBusy(id);
+    setError("");
+    try {
+      const r = await fetch(`/api/${type}/${id}`, { method: "DELETE" });
+      if (!r.ok) throw Error("Could not remove this item. Please try again.");
+      if (type === "students") setStudents((s) => s.filter((i) => i.id !== id));
+      else setAssignments((a) => a.filter((i) => i.id !== id));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
   }
-
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    router.replace("/admin/login");
+  }
+  const tabs = [
+    "Overview",
+    ...(role === "admin" ? ["Students"] : []),
+    "Assignments",
+    "Announcements",
+  ];
+  const rows = (
+    tab === "Students"
+      ? students
+      : tab === "Assignments"
+        ? assignments
+        : announcements
+  ).filter((a) =>
+    [
+      a.student_name,
+      a.student_email,
+      a.assignment_title,
+      a.course_title,
+      a.title,
+      a.body,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-8">
-      <div className="max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
-            <p className="text-slate-400 text-sm mt-1">{user?.email}</p>
-            <p className="text-xs mt-1">
-              <span className={`px-2 py-0.5 rounded text-xs font-bold ${userRole === 'admin' ? 'bg-green-900/40 text-green-400' : 'bg-blue-900/40 text-blue-400'}`}>
-                {userRole === 'admin' ? 'Admin' : 'Course Rep'}
-              </span>
-            </p>
-          </div>
-          <div className="flex gap-3">
-            {userRole === 'admin' && (
-              <a href="/admin/invite" className="border border-green-800 text-green-400 px-4 py-2 rounded text-xs tracking-widest uppercase hover:bg-green-900/30 transition-colors">
-                Invite User
-              </a>
+    <>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">BEHIND EVERY CONNECTED CLASS</p>
+          <h1>
+            Your admin workspace<span>.</span>
+          </h1>
+          <p>
+            {user
+              ? `${user.email} · ${role === "admin" ? "Administrator" : "Course representative"}`
+              : "Keep your class organized, together."}
+          </p>
+        </div>
+        {user && (
+          <div className="admin-actions">
+            {role === "admin" && (
+              <Link className="button primary" href="/admin/invite">
+                <Icon name="plus" size={16} />
+                Invite teammate
+              </Link>
             )}
-            <a href="/" className="border border-slate-700 text-slate-300 px-4 py-2 rounded text-xs tracking-widest uppercase hover:border-green-400 hover:text-green-400 transition-colors">
-              Dashboard
-            </a>
-            <button
-              onClick={handleSignOut}
-              className="border border-red-800 text-red-400 px-4 py-2 rounded text-xs tracking-widest uppercase hover:bg-red-900/30 transition-colors"
-            >
-              Sign Out
+            <button className="button secondary" onClick={signOut}>
+              Sign out
             </button>
           </div>
+        )}
+      </div>
+      {error && (
+        <div className="notice error" role="alert">
+          {error}
+          <button
+            className="text-button"
+            onClick={() => {
+              setLoading(true);
+              setError("");
+              load();
+            }}
+          >
+            Try again
+          </button>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
-          <div className="bg-slate-900 border border-slate-800 rounded p-5">
-            <p className="text-3xl font-bold text-green-400">{students.length}</p>
-            <p className="text-slate-400 text-xs uppercase tracking-widest mt-1">Students</p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 rounded p-5">
-            <p className="text-3xl font-bold text-blue-400">{assignments.length}</p>
-            <p className="text-slate-400 text-xs uppercase tracking-widest mt-1">Assignments</p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 rounded p-5">
-            <p className="text-3xl font-bold text-yellow-400">{announcements.length}</p>
-            <p className="text-slate-400 text-xs uppercase tracking-widest mt-1">Announcements</p>
-          </div>
+      )}
+      {loading ? (
+        <div
+          role="status"
+          aria-label="Loading workspace"
+          className="skeleton-list"
+        >
+          <div className="skeleton" />
+          <div className="skeleton" />
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-slate-800">
-          {['overview', 'students', 'assignments', 'announcements'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-3 text-xs uppercase tracking-widest font-bold transition-colors ${activeTab === tab ? 'text-green-400 border-b-2 border-green-400' : 'text-slate-500 hover:text-slate-300'}`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Students Tab */}
-        {activeTab === 'students' && (
-          userRole !== 'admin' ? (
-            <p className="text-red-400 text-sm">Access denied. Admins only.</p>
-          ) : (
-            <div className="space-y-2">
-              {students.map(s => (
-                <div key={s.id} className="flex items-center justify-between border border-slate-800 rounded px-4 py-3 hover:bg-slate-800/50">
+      ) : (
+        user && (
+          <>
+            <div className="stats">
+              {[
+                {
+                  label: role === "admin" ? "Registered students" : "Your role",
+                  value: role === "admin" ? students.length : "Rep",
+                  icon: "users",
+                },
+                {
+                  label: "Class assignments",
+                  value: assignments.length,
+                  icon: "book",
+                },
+                {
+                  label: "Announcements",
+                  value: announcements.length,
+                  icon: "bell",
+                },
+              ].map((s) => (
+                <div className="stat-card" key={s.label}>
                   <div>
-                    <p className="text-white text-sm font-medium">{s.student_name}</p>
-                    <p className="text-slate-400 text-xs">{s.student_email}</p>
+                    <span className="stat-icon">
+                      <Icon name={s.icon} />
+                    </span>
+                    <span className="stat-value">{s.value}</span>
                   </div>
-                  <button
-                    onClick={() => deleteStudent(s.id)}
-                    className="text-red-400 text-xs hover:text-red-300 transition-colors"
-                  >
-                    Remove
-                  </button>
+                  <h3>{s.label}</h3>
                 </div>
               ))}
             </div>
-          )
-        )}
-
-        {/* Assignments Tab */}
-        {activeTab === 'assignments' && (
-          <div className="space-y-2">
-            {assignments.map(a => (
-              <div key={a.id} className="flex items-center justify-between border border-slate-800 rounded px-4 py-3 hover:bg-slate-800/50">
-                <div>
-                  <p className="text-white text-sm font-medium">{a.assignment_title}</p>
-                  <p className="text-slate-400 text-xs">{a.course_title} · Due {a.deadline_date}</p>
+            <section className="panel">
+              <div className="filter-tabs">
+                {tabs.map((t) => (
+                  <button
+                    key={t}
+                    className={tab === t ? "selected" : ""}
+                    aria-pressed={tab === t}
+                    onClick={() => {
+                      setTab(t);
+                      setQuery("");
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              {tab === "Overview" ? (
+                <div className="admin-overview">
+                  {[
+                    {
+                      href: "/submit",
+                      title: "Give your class a head start",
+                      text: "Add a new assignment and its deadline.",
+                      icon: "book",
+                    },
+                    {
+                      href: "/announce",
+                      title: "Keep everyone in the loop",
+                      text: "Post a class update to the noticeboard.",
+                      icon: "bell",
+                    },
+                    ...(role === "admin"
+                      ? [
+                          {
+                            href: "/admin/invite",
+                            title: "Build your class team",
+                            text: "Invite an admin or course representative.",
+                            icon: "users",
+                          },
+                        ]
+                      : []),
+                  ].map((a) => (
+                    <Link key={a.href} href={a.href}>
+                      <div>
+                        <h3>{a.title}</h3>
+                        <p>{a.text}</p>
+                      </div>
+                      <Icon name={a.icon} />
+                    </Link>
+                  ))}
                 </div>
-                <button
-                  onClick={() => deleteAssignment(a.id)}
-                  className="text-red-400 text-xs hover:text-red-300 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Announcements Tab */}
-        {activeTab === 'announcements' && (
-          <div className="space-y-2">
-            {announcements.map(a => (
-              <div key={a.id} className="border border-slate-800 rounded px-4 py-3 hover:bg-slate-800/50">
-                <p className="text-white text-sm font-medium">{a.title}</p>
-                <p className="text-slate-400 text-xs mt-1">{a.body}</p>
-                <p className="text-slate-600 text-xs mt-2">Posted by {a.posted_by}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div className="text-slate-400 text-sm space-y-2">
-            <p>Welcome to the ClassFlow admin panel.</p>
-            <p>Use the tabs above to manage students, assignments, and announcements.</p>
-            <p>Navigate to the Students tab to remove a student from the email list.</p>
-            <p>Navigate to the Assignments tab to delete an assignment from the dashboard.</p>
-          </div>
-        )}
-
-      </div>
-    </main>
-  )
+              ) : (
+                <>
+                  <div className="section-heading">
+                    <h2>{tab}</h2>
+                    <span className="count">{rows.length}</span>
+                  </div>
+                  <div className="filters">
+                    <label className="search">
+                      <Icon name="search" />
+                      <input
+                        aria-label={`Search ${tab.toLowerCase()}`}
+                        placeholder={`Search ${tab.toLowerCase()}…`}
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <div className="admin-list">
+                    {rows.length ? (
+                      rows.map((a) => (
+                        <div className="admin-row" key={a.id}>
+                          <div>
+                            <h3>
+                              {a.student_name || a.assignment_title || a.title}
+                            </h3>
+                            <p>
+                              {tab === "Students"
+                                ? a.student_email
+                                : tab === "Assignments"
+                                  ? `${a.course_title} · Due ${formatDate(a.deadline_date)}`
+                                  : a.body}
+                            </p>
+                            {tab === "Announcements" && (
+                              <p>Posted by {a.posted_by}</p>
+                            )}
+                          </div>
+                          {tab !== "Announcements" && (
+                            <button
+                              className="delete-button"
+                              disabled={busy === a.id}
+                              onClick={() => remove(tab.toLowerCase(), a.id)}
+                            >
+                              {busy === a.id
+                                ? "Removing…"
+                                : tab === "Students"
+                                  ? "Remove"
+                                  : "Delete"}
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="empty-state">
+                        <span className="empty-icon">
+                          <Icon name="search" />
+                        </span>
+                        <h3>
+                          {query
+                            ? "No matches found"
+                            : `No ${tab.toLowerCase()} yet`}
+                        </h3>
+                        <p>
+                          {query
+                            ? "Try a different search."
+                            : "New items will appear here."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </section>
+          </>
+        )
+      )}
+    </>
+  );
 }

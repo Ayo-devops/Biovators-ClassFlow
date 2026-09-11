@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ClassFlow
 
-## Getting Started
+A mobile-first classroom workspace built with Next.js 16, React 19, Tailwind CSS 4 and Supabase.
 
-First, run the development server:
+## Run locally
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Run `npm ci`.
+2. Create `.env.local` with your existing service configuration:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SECRET_KEY=
+BREVO_API_KEY=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Run `npm run dev` and open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Without service credentials, the UI still renders, data endpoints return HTTP 503, and sign-in explains that configuration is missing. No sample records are inserted. Existing tables and email/WhatsApp integrations are preserved.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Interface
 
-## Learn More
+- Shared desktop sidebar and phone bottom navigation with safe-area spacing.
+- Searchable assignments, course and deadline filters, expandable instructions.
+- Calendar-day deadline grouping: assignments due today remain visible all day.
+- Shared accessible forms, browser validation, loading/error/success feedback.
+- Admin search and management with failed deletions preserved in the list.
+- Reduced-motion support, keyboard focus styles, 16px mobile inputs.
 
-To learn more about Next.js, take a look at the following resources:
+## Progressive web app
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The manifest, 192px/512px icons, maskable icon and Apple icon enable home-screen installation on supported browsers. Serve through HTTPS in production (localhost also works).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The service worker registers only in production. Test with `npm run build` followed by `npm start`. Android/Chromium offers the native install prompt when available; iPhone users receive Safari Share → Add to Home Screen instructions. Standalone installations hide the install action.
 
-## Deploy on Vercel
+Offline navigation displays a dedicated reconnect screen. This version does not cache assignment data, authenticated pages, or API responses, queue submissions, or add push notifications. Email/WhatsApp reminders remain separate from PWA installation.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Verification
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+npm run lint
+npm run build
+node scripts/check-core.mjs
+```
+
+Core checks cover calendar boundaries, manifest icon dimensions, online/offline navigation behavior, and exclusion of API calls and mutations from service-worker caching. Icons can be regenerated with `node scripts/generate-icons.cjs` (uses Next.js's installed sharp dependency).
+
+## Existing integration limitations
+
+Live sign-in, database writes, invites and message delivery require the existing credentials and external services. They cannot be verified from this checkout without that configuration. The WhatsApp integration currently calls a separate service on port 3001.
+
+The inherited class-password gate is client-side, and existing privileged API routes do not enforce server-side authentication/roles. This UI rebuild does not constitute an authorization hardening pass; those routes should be secured before a public release. Registration stores `whatsapp_number`, while the existing reminder code reads `phone_number`; verify the database mapping before claiming WhatsApp delivery.

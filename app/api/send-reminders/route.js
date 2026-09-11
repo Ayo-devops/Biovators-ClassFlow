@@ -1,111 +1,162 @@
-import { createClient } from '@supabase/supabase-js'
-import { BrevoClient } from '@getbrevo/brevo'
+import { createClient } from "@supabase/supabase-js";
+import { BrevoClient } from "@getbrevo/brevo";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SECRET_KEY
-)
+const supabase =
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
+    ? createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SECRET_KEY,
+      )
+    : null;
 
-const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY })
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
 
 async function sendWhatsApp(phone, message) {
   try {
-    if (!phone) return
-    const res = await fetch('http://127.0.0.1:3001/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, message })
-    })
-    const data = await res.json()
-    console.log('WhatsApp result:', data)
+    if (!phone) return;
+    const res = await fetch("http://127.0.0.1:3001/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, message }),
+    });
+    const data = await res.json();
+    console.log("WhatsApp result:", data);
   } catch (err) {
-    console.log('WhatsApp error:', err.message)
+    console.log("WhatsApp error:", err.message);
   }
 }
 
-const sendEmails = async (assignments, subjectPrefix, messageLine, students) => {
+const sendEmails = async (
+  assignments,
+  subjectPrefix,
+  messageLine,
+  students,
+) => {
   for (const assignment of assignments) {
     for (const student of students) {
       try {
-        const emailHtml = '<p>Hi ' + student.student_name + ',</p>' +
-          '<p>' + messageLine + '</p>' +
-          '<br/>' +
-          '<p><b>Course:</b> ' + assignment.course_title + '</p>' +
-          '<p><b>Assignment:</b> ' + assignment.assignment_title + '</p>' +
-          '<p><b>Lecturer:</b> ' + assignment.lecturer_name + '</p>' +
-          '<p><b>Deadline:</b> ' + assignment.deadline_date + '</p>' +
-          '<p><b>Submission Method:</b> ' + assignment.submission_method + '</p>' +
-          '<p><b>Priority:</b> ' + assignment.priority + '</p>' +
-          (assignment.description ? '<p><b>Description:</b></p><p>' + assignment.description.replace(/\n/g, '<br/>') + '</p>' : '') +
-          '<br/>' +
-          '<p>-- ClassFlow</p>'
+        const emailHtml =
+          "<p>Hi " +
+          student.student_name +
+          ",</p>" +
+          "<p>" +
+          messageLine +
+          "</p>" +
+          "<br/>" +
+          "<p><b>Course:</b> " +
+          assignment.course_title +
+          "</p>" +
+          "<p><b>Assignment:</b> " +
+          assignment.assignment_title +
+          "</p>" +
+          "<p><b>Lecturer:</b> " +
+          assignment.lecturer_name +
+          "</p>" +
+          "<p><b>Deadline:</b> " +
+          assignment.deadline_date +
+          "</p>" +
+          "<p><b>Submission Method:</b> " +
+          assignment.submission_method +
+          "</p>" +
+          "<p><b>Priority:</b> " +
+          assignment.priority +
+          "</p>" +
+          (assignment.description
+            ? "<p><b>Description:</b></p><p>" +
+              assignment.description.replace(/\n/g, "<br/>") +
+              "</p>"
+            : "") +
+          "<br/>" +
+          "<p>-- ClassFlow</p>";
 
         await brevo.transactionalEmails.sendTransacEmail({
-          sender: { name: 'ClassFlow', email: 'akoredeayomide099@gmail.com' },
+          sender: { name: "ClassFlow", email: "akoredeayomide099@gmail.com" },
           to: [{ email: student.student_email, name: student.student_name }],
-          subject: subjectPrefix + ' - ' + assignment.assignment_title,
-          htmlContent: emailHtml
-        })
-        console.log('Email sent to:', student.student_email)
+          subject: subjectPrefix + " - " + assignment.assignment_title,
+          htmlContent: emailHtml,
+        });
+        console.log("Email sent to:", student.student_email);
 
         await sendWhatsApp(
           student.phone_number,
           `${subjectPrefix}\n\n` +
-          `Course: ${assignment.course_title}\n` +
-          `Assignment: ${assignment.assignment_title}\n` +
-          `Lecturer: ${assignment.lecturer_name}\n` +
-          `Deadline: ${assignment.deadline_date}\n` +
-          `Submission: ${assignment.submission_method}\n` +
-          `Priority: ${assignment.priority}` +
-          (assignment.description ? `\n\n${assignment.description}` : '') +
-          `\n\n— ClassFlow`
-        )
-
+            `Course: ${assignment.course_title}\n` +
+            `Assignment: ${assignment.assignment_title}\n` +
+            `Lecturer: ${assignment.lecturer_name}\n` +
+            `Deadline: ${assignment.deadline_date}\n` +
+            `Submission: ${assignment.submission_method}\n` +
+            `Priority: ${assignment.priority}` +
+            (assignment.description ? `\n\n${assignment.description}` : "") +
+            `\n\n— ClassFlow`,
+        );
       } catch (emailError) {
-        console.log('Email error:', emailError.message)
+        console.log("Email error:", emailError.message);
       }
     }
   }
-}
+};
 
 export async function GET() {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  if (!supabase)
+    return Response.json(
+      { error: "Class data is not configured yet." },
+      { status: 503 },
+    );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const in1Day = new Date(today)
-  in1Day.setDate(today.getDate() + 1)
+  const in1Day = new Date(today);
+  in1Day.setDate(today.getDate() + 1);
 
-  const in3Days = new Date(today)
-  in3Days.setDate(today.getDate() + 3)
+  const in3Days = new Date(today);
+  in3Days.setDate(today.getDate() + 3);
 
-  const { data: students } = await supabase.from('students').select('*')
+  const { data: students } = await supabase.from("students").select("*");
 
   if (!students || students.length === 0) {
-    return Response.json({ message: 'No students found' })
+    return Response.json({ message: "No students found" });
   }
 
   const { data: todayAssignments } = await supabase
-    .from('assignments').select('*')
-    .eq('deadline_date', today.toISOString().split('T')[0])
+    .from("assignments")
+    .select("*")
+    .eq("deadline_date", today.toISOString().split("T")[0]);
 
   const { data: oneDayAssignments } = await supabase
-    .from('assignments').select('*')
-    .eq('deadline_date', in1Day.toISOString().split('T')[0])
+    .from("assignments")
+    .select("*")
+    .eq("deadline_date", in1Day.toISOString().split("T")[0]);
 
   const { data: threeDayAssignments } = await supabase
-    .from('assignments').select('*')
-    .eq('deadline_date', in3Days.toISOString().split('T')[0])
+    .from("assignments")
+    .select("*")
+    .eq("deadline_date", in3Days.toISOString().split("T")[0]);
 
-  await sendEmails(todayAssignments || [], '[ClassFlow] Due Today', 'Today is the deadline. Submit before it is too late.', students)
-  await sendEmails(oneDayAssignments || [], '[ClassFlow] Due Tomorrow', 'This assignment is due TOMORROW. Do not wait.', students)
-  await sendEmails(threeDayAssignments || [], '[ClassFlow] Due in 3 Days', 'This assignment is due in 3 days. Start early.', students)
+  await sendEmails(
+    todayAssignments || [],
+    "[ClassFlow] Due Today",
+    "Today is the deadline. Submit before it is too late.",
+    students,
+  );
+  await sendEmails(
+    oneDayAssignments || [],
+    "[ClassFlow] Due Tomorrow",
+    "This assignment is due TOMORROW. Do not wait.",
+    students,
+  );
+  await sendEmails(
+    threeDayAssignments || [],
+    "[ClassFlow] Due in 3 Days",
+    "This assignment is due in 3 days. Start early.",
+    students,
+  );
 
   return Response.json({
-    message: 'Reminders sent',
+    message: "Reminders sent",
     breakdown: {
       today: todayAssignments?.length || 0,
       tomorrow: oneDayAssignments?.length || 0,
-      threeDays: threeDayAssignments?.length || 0
-    }
-  })
+      threeDays: threeDayAssignments?.length || 0,
+    },
+  });
 }
