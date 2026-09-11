@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { registrationRecord } from "../../../lib/registration";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -35,7 +36,7 @@ export async function POST(request) {
 
   const { data, error } = await supabase
     .from("students")
-    .insert([body])
+    .insert([registrationRecord(body)])
     .select()
     .single();
 

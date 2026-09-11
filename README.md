@@ -49,4 +49,4 @@ Core checks cover calendar boundaries, manifest icon dimensions, online/offline 
 
 Live sign-in, database writes, invites and message delivery require the existing credentials and external services. They cannot be verified from this checkout without that configuration. The WhatsApp integration currently calls a separate service on port 3001.
 
-The inherited class-password gate is client-side, and existing privileged API routes do not enforce server-side authentication/roles. This UI rebuild does not constitute an authorization hardening pass; those routes should be secured before a public release. Registration stores `whatsapp_number`, while the existing reminder code reads `phone_number`; verify the database mapping before claiming WhatsApp delivery.
+The inherited class-password gate is client-side, and existing privileged API routes do not enforce server-side authentication/roles. This UI rebuild does not constitute an authorization hardening pass; those routes should be secured before a public release. The registration API maps the form's `whatsapp_number` field to the existing `students.phone_number` column used by reminders.
