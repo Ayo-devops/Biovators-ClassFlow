@@ -7,6 +7,7 @@ import Icon from "../../../components/icon";
 export default function Invite() {
   const router = useRouter();
   const [role, setRole] = useState(null),
+    [accessToken, setAccessToken] = useState(""),
     [email, setEmail] = useState(""),
     [inviteRole, setInviteRole] = useState("rep"),
     [error, setError] = useState(""),
@@ -28,7 +29,12 @@ export default function Invite() {
           router.replace("/admin/login");
           return;
         }
-        setRole(session.user.user_metadata?.role || "rep");
+        setAccessToken(session.access_token);
+        setRole(
+          session.user.app_metadata?.role ||
+            session.user.user_metadata?.role ||
+            "rep",
+        );
       } catch (e) {
         setError(e.message);
       }
@@ -43,7 +49,10 @@ export default function Invite() {
     try {
       const r = await fetch("/api/invite", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ email, role: inviteRole }),
       });
       const data = await r.json();

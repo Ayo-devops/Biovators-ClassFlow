@@ -1084,6 +1084,18 @@ button {
   font-size: 11px;
   min-height: 44px;
 }
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.row-actions .button {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 11px;
+}
 .admin-overview {
   padding: 27px;
   display: grid;

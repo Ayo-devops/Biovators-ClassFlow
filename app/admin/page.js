@@ -9,6 +9,7 @@ export default function Admin() {
   const router = useRouter();
   const [user, setUser] = useState(null),
     [role, setRole] = useState(null),
+    [accessToken, setAccessToken] = useState(""),
     [assignments, setAssignments] = useState([]),
     [students, setStudents] = useState([]),
     [announcements, setAnnouncements] = useState([]);
@@ -16,7 +17,8 @@ export default function Admin() {
     [error, setError] = useState(""),
     [tab, setTab] = useState("Overview"),
     [query, setQuery] = useState(""),
-    [busy, setBusy] = useState(null);
+    [busy, setBusy] = useState(null),
+    [reminderNotice, setReminderNotice] = useState("");
   const load = useCallback(async () => {
     try {
       if (!supabase) {
@@ -35,7 +37,11 @@ export default function Admin() {
         return;
       }
       setUser(session.user);
-      const r = session.user.user_metadata?.role || "rep";
+      setAccessToken(session.access_token);
+      const r =
+        session.user.app_metadata?.role ||
+        session.user.user_metadata?.role ||
+        "rep";
       setRole(r);
       const urls = [
         "/api/assignments",
@@ -44,7 +50,12 @@ export default function Admin() {
       ];
       const data = await Promise.all(
         urls.map(async (url) => {
-          const response = await fetch(url);
+          const response = await fetch(url, {
+            headers:
+              url === "/api/students"
+                ? { Authorization: `Bearer ${session.access_token}` }
+                : undefined,
+          });
           if (!response.ok)
             throw Error("Could not load workspace data. Please try again.");
           const json = await response.json();
@@ -79,10 +90,63 @@ export default function Admin() {
     setBusy(id);
     setError("");
     try {
-      const r = await fetch(`/api/${type}/${id}`, { method: "DELETE" });
+      const r = await fetch(`/api/${type}/${id}`, {
+        method: "DELETE",
+        headers:
+          type === "students"
+            ? { Authorization: `Bearer ${accessToken}` }
+            : undefined,
+      });
       if (!r.ok) throw Error("Could not remove this item. Please try again.");
       if (type === "students") setStudents((s) => s.filter((i) => i.id !== id));
       else setAssignments((a) => a.filter((i) => i.id !== id));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+  async function remindStudent(student, send = false) {
+    if (
+      send &&
+      !window.confirm(
+        `Send current deadline reminders only to ${student.student_name}?`,
+      )
+    )
+      return;
+
+    const action = send ? "send" : "preview";
+    setBusy(`${student.id}:${action}`);
+    setError("");
+    setReminderNotice("");
+    try {
+      const url = `/api/send-reminders${
+        send ? "" : `?studentId=${encodeURIComponent(student.id)}`
+      }`;
+      const response = await fetch(url, {
+        method: send ? "POST" : "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          ...(send ? { "Content-Type": "application/json" } : {}),
+        },
+        body: send ? JSON.stringify({ studentId: student.id }) : undefined,
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error || "Reminder request failed.");
+
+      if (send) {
+        setReminderNotice(
+          `Finished for ${student.student_name}: ${data.results.emails} email and ${data.results.whatsapp} WhatsApp reminder(s) sent${
+            data.results.failures.length
+              ? `; ${data.results.failures.length} failed.`
+              : "."
+          }`,
+        );
+      } else {
+        setReminderNotice(
+          `${student.student_name} would receive ${data.deliveries} reminder(s) across ${data.assignments} assignment(s). Nothing was sent.`,
+        );
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -164,6 +228,11 @@ export default function Admin() {
           >
             Try again
           </button>
+        </div>
+      )}
+      {reminderNotice && (
+        <div className="notice success" role="status">
+          {reminderNotice}
         </div>
       )}
       {loading ? (
@@ -294,7 +363,35 @@ export default function Admin() {
                               <p>Posted by {a.posted_by}</p>
                             )}
                           </div>
-                          {tab !== "Announcements" && (
+                          {tab === "Students" ? (
+                            <div className="row-actions">
+                              <button
+                                className="button secondary"
+                                disabled={busy !== null}
+                                onClick={() => remindStudent(a)}
+                              >
+                                {busy === `${a.id}:preview`
+                                  ? "Checking…"
+                                  : "Preview"}
+                              </button>
+                              <button
+                                className="button primary"
+                                disabled={busy !== null}
+                                onClick={() => remindStudent(a, true)}
+                              >
+                                {busy === `${a.id}:send`
+                                  ? "Sending…"
+                                  : "Send reminder"}
+                              </button>
+                              <button
+                                className="delete-button"
+                                disabled={busy !== null}
+                                onClick={() => remove("students", a.id)}
+                              >
+                                {busy === a.id ? "Removing…" : "Remove"}
+                              </button>
+                            </div>
+                          ) : tab !== "Announcements" ? (
                             <button
                               className="delete-button"
                               disabled={busy === a.id}
@@ -302,11 +399,9 @@ export default function Admin() {
                             >
                               {busy === a.id
                                 ? "Removing…"
-                                : tab === "Students"
-                                  ? "Remove"
-                                  : "Delete"}
+                                : "Delete"}
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       ))
                     ) : (

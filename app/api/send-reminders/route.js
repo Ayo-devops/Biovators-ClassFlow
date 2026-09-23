@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
-import { timingSafeEqual } from "node:crypto";
 import { sendWhatsApp } from "../../../lib/whatsapp-server";
+import { authorizeAdmin } from "../../../lib/admin-auth";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -10,33 +10,6 @@ const supabase =
         process.env.SUPABASE_SECRET_KEY,
       )
     : null;
-
-function isAuthorized(request) {
-  const expected = process.env.REMINDER_API_KEY;
-  const authorization = request.headers.get("authorization");
-  if (!expected || !authorization?.startsWith("Bearer ")) return false;
-
-  const provided = authorization.slice("Bearer ".length);
-  const expectedBuffer = Buffer.from(expected);
-  const providedBuffer = Buffer.from(provided);
-  return (
-    expectedBuffer.length === providedBuffer.length &&
-    timingSafeEqual(expectedBuffer, providedBuffer)
-  );
-}
-
-function authorizationError(request) {
-  if (!process.env.REMINDER_API_KEY) {
-    return Response.json(
-      { error: "Reminder authorization is not configured." },
-      { status: 503 },
-    );
-  }
-  if (!isAuthorized(request)) {
-    return Response.json({ error: "Unauthorized." }, { status: 401 });
-  }
-  return null;
-}
 
 async function loadReminderContext(studentId) {
   const today = new Date();
@@ -207,8 +180,10 @@ async function deliver(context) {
 }
 
 export async function GET(request) {
-  const authError = authorizationError(request);
-  if (authError) return authError;
+  const authorization = await authorizeAdmin(request, {
+    allowReminderKey: true,
+  });
+  if (authorization.error) return authorization.error;
   if (!supabase) {
     return Response.json(
       { error: "Class data is not configured yet." },
@@ -226,8 +201,10 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const authError = authorizationError(request);
-  if (authError) return authError;
+  const authorization = await authorizeAdmin(request, {
+    allowReminderKey: true,
+  });
+  if (authorization.error) return authorization.error;
   if (!supabase || !process.env.BREVO_API_KEY) {
     return Response.json(
       { error: "Reminder delivery is not configured yet." },

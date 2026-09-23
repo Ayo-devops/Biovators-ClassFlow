@@ -15,6 +15,7 @@ BREVO_API_KEY=
 WHATSAPP_API_URL=http://127.0.0.1:3001
 WHATSAPP_API_KEY=
 REMINDER_API_KEY=
+CLASSFLOW_ADMIN_EMAILS=admin@example.com
 ```
 
 `WHATSAPP_API_KEY` is the private key used by the ClassFlow server when it
@@ -22,10 +23,17 @@ calls the WhatsApp service. `REMINDER_API_KEY` is a separate bearer key for
 authorizing scheduled or manual calls to `/api/send-reminders`; neither value
 should use the `NEXT_PUBLIC_` prefix.
 
+`CLASSFLOW_ADMIN_EMAILS` is a comma-separated server-only bootstrap allowlist.
+It lets existing administrators use protected controls while their Supabase
+accounts are migrated to trusted `app_metadata.role` values. New invitations
+store their role in `app_metadata` automatically.
+
 `GET /api/send-reminders` is always a dry run. Add `?studentId=<id>` to preview
 one student. Delivery requires `POST` with either `{ "studentId": "..." }` for
 a controlled test or `{ "confirmAll": true }` for the complete reminder list.
-All requests require `Authorization: Bearer <REMINDER_API_KEY>`.
+Automations authenticate with `Authorization: Bearer <REMINDER_API_KEY>`.
+Admin controls instead send the signed-in user's Supabase access token, which
+is verified server-side and never exposes the scheduler key in the browser.
 
 Students who registered without a phone number can visit `/update-phone` and
 verify ownership of their registration email through a Supabase magic link
@@ -66,4 +74,9 @@ Core checks cover calendar boundaries, manifest icon dimensions, online/offline 
 
 Live sign-in, database writes, invites and message delivery require the existing credentials and external services. They cannot be verified from this checkout without that configuration. The WhatsApp integration currently calls a separate service on port 3001.
 
-The inherited class-password gate is client-side, and existing privileged API routes do not enforce server-side authentication/roles. This UI rebuild does not constitute an authorization hardening pass; those routes should be secured before a public release. The registration API maps the form's `whatsapp_number` field to the existing `students.phone_number` column used by reminders.
+The inherited class-password gate is client-side. Student-list access,
+student deletion, invitations, and reminder delivery now enforce server-side
+administrator authorization; the remaining privileged mutations should be
+migrated to the same pattern. The registration API maps the form's
+`whatsapp_number` field to the existing `students.phone_number` column used by
+reminders.

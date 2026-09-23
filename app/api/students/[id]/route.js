@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { authorizeAdmin } from "../../../../lib/admin-auth";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -9,6 +10,8 @@ const supabase =
     : null;
 
 export async function DELETE(request, { params }) {
+  const authorization = await authorizeAdmin(request);
+  if (authorization.error) return authorization.error;
   if (!supabase)
     return Response.json(
       { error: "Class data is not configured yet." },

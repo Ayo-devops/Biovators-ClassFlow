@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { registrationRecord } from "../../../lib/registration";
+import { authorizeAdmin } from "../../../lib/admin-auth";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -10,7 +11,9 @@ const supabase =
     : null;
 
 // GET - fetch all students
-export async function GET() {
+export async function GET(request) {
+  const authorization = await authorizeAdmin(request);
+  if (authorization.error) return authorization.error;
   if (!supabase)
     return Response.json(
       { error: "Class data is not configured yet." },
