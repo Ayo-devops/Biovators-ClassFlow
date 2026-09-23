@@ -16,7 +16,12 @@ const configs = {
     fields: [
       ["student_name", "Full name", "text", "e.g. Akorede Ayomide"],
       ["student_email", "Email address", "email", "you@example.com"],
-      ["whatsapp_number", "WhatsApp number", "tel", "e.g. 08012345678"],
+      [
+        "whatsapp_number",
+        "WhatsApp number (optional)",
+        "tel",
+        "e.g. +2348012345678",
+      ],
     ],
     success: "You’re on the list!",
     successBody:
@@ -198,7 +203,7 @@ export default function ClassForm({ kind }) {
                 options={Array.isArray(type) ? type : undefined}
                 multiline={type === "textarea"}
                 placeholder={placeholder}
-                required={name !== "description"}
+                required={name !== "description" && name !== "whatsapp_number"}
                 value={form[name]}
                 onChange={change}
                 autoComplete={
@@ -222,6 +227,11 @@ export default function ClassForm({ kind }) {
               ? "By registering, you agree to receive class assignment reminders."
               : "Double-check your details before sharing with the class."}
           </p>
+          {kind === "register" && (
+            <Link href="/update-phone" className="text-button">
+              Already registered? Add or update your WhatsApp number.
+            </Link>
+          )}
         </>
       )}
     </FormPage>

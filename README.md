@@ -12,7 +12,24 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SECRET_KEY=
 BREVO_API_KEY=
+WHATSAPP_API_URL=http://127.0.0.1:3001
+WHATSAPP_API_KEY=
+REMINDER_API_KEY=
 ```
+
+`WHATSAPP_API_KEY` is the private key used by the ClassFlow server when it
+calls the WhatsApp service. `REMINDER_API_KEY` is a separate bearer key for
+authorizing scheduled or manual calls to `/api/send-reminders`; neither value
+should use the `NEXT_PUBLIC_` prefix.
+
+`GET /api/send-reminders` is always a dry run. Add `?studentId=<id>` to preview
+one student. Delivery requires `POST` with either `{ "studentId": "..." }` for
+a controlled test or `{ "confirmAll": true }` for the complete reminder list.
+All requests require `Authorization: Bearer <REMINDER_API_KEY>`.
+
+Students who registered without a phone number can visit `/update-phone` and
+verify ownership of their registration email through a Supabase magic link
+before adding or replacing their WhatsApp number.
 
 3. Run `npm run dev` and open http://localhost:3000.
 

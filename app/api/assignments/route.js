@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
+import { sendWhatsApp } from "../../../lib/whatsapp-server";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -10,21 +11,6 @@ const supabase =
     : null;
 
 const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
-
-async function sendWhatsApp(phone, message) {
-  try {
-    if (!phone) return;
-    const res = await fetch("http://127.0.0.1:3001/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, message }),
-    });
-    const data = await res.json();
-    console.log("WhatsApp result:", data);
-  } catch (err) {
-    console.log("WhatsApp error:", err.message);
-  }
-}
 
 export async function GET() {
   if (!supabase)
