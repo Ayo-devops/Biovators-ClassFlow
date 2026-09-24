@@ -220,10 +220,16 @@ export default function Admin() {
         {user && (
           <div className="admin-actions">
             {role === "admin" && (
-              <Link className="button primary" href="/admin/invite">
-                <Icon name="plus" size={16} />
-                Invite teammate
-              </Link>
+              <>
+                <Link className="button secondary" href="/admin/whatsapp">
+                  <Icon name="users" size={16} />
+                  WhatsApp
+                </Link>
+                <Link className="button primary" href="/admin/invite">
+                  <Icon name="plus" size={16} />
+                  Invite teammate
+                </Link>
+              </>
             )}
             <button className="button secondary" onClick={signOut}>
               Sign out
