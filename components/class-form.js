@@ -228,9 +228,21 @@ export default function ClassForm({ kind }) {
               : "Double-check your details before sharing with the class."}
           </p>
           {kind === "register" && (
-            <Link href="/update-phone" className="text-button">
-              Already registered? Add or update your WhatsApp number.
-            </Link>
+            <div className="existing-registration">
+              <span className="stat-icon">
+                <Icon name="clock" size={17} />
+              </span>
+              <div>
+                <strong>Already registered?</strong>
+                <p>
+                  Add a number you skipped earlier, or replace an old WhatsApp
+                  number securely.
+                </p>
+              </div>
+              <Link href="/update-phone" className="button secondary">
+                Update number
+              </Link>
+            </div>
           )}
         </>
       )}

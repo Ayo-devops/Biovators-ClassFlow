@@ -376,12 +376,17 @@ export default function Dashboard() {
               Right when you need it.
             </h3>
             <p>
-              Sign up for class reminders and give your memory a well-earned
-              break.
+              Join the reminder list, or keep an existing registration current
+              when your WhatsApp number changes.
             </p>
-            <Link className="button primary" href="/register">
-              Keep me in the loop <Icon name="arrow" size={16} />
-            </Link>
+            <div className="reminder-actions">
+              <Link className="button primary" href="/register">
+                Register for reminders <Icon name="arrow" size={16} />
+              </Link>
+              <Link className="button secondary" href="/update-phone">
+                Update WhatsApp number
+              </Link>
+            </div>
           </section>
           <div className="mobile-install">
             <InstallApp />

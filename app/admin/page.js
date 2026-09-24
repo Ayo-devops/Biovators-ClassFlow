@@ -83,7 +83,9 @@ export default function Admin() {
       !window.confirm(
         type === "students"
           ? "Remove this student from the reminder list?"
-          : "Delete this assignment?",
+          : type === "announcements"
+            ? "Delete this announcement from the noticeboard? This cannot be undone."
+            : "Delete this assignment?",
       )
     )
       return;
@@ -93,12 +95,18 @@ export default function Admin() {
       const r = await fetch(`/api/${type}/${id}`, {
         method: "DELETE",
         headers:
-          type === "students"
+          type === "students" || type === "announcements"
             ? { Authorization: `Bearer ${accessToken}` }
             : undefined,
       });
-      if (!r.ok) throw Error("Could not remove this item. Please try again.");
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok)
+        throw Error(
+          data.error || "Could not remove this item. Please try again.",
+        );
       if (type === "students") setStudents((s) => s.filter((i) => i.id !== id));
+      else if (type === "announcements")
+        setAnnouncements((items) => items.filter((item) => item.id !== id));
       else setAssignments((a) => a.filter((i) => i.id !== id));
     } catch (e) {
       setError(e.message);
@@ -391,17 +399,25 @@ export default function Admin() {
                                 {busy === a.id ? "Removing…" : "Remove"}
                               </button>
                             </div>
-                          ) : tab !== "Announcements" ? (
+                          ) : tab === "Announcements" ? (
+                            role === "admin" && (
+                              <button
+                                className="delete-button"
+                                disabled={busy !== null}
+                                onClick={() => remove("announcements", a.id)}
+                              >
+                                {busy === a.id ? "Deleting…" : "Delete"}
+                              </button>
+                            )
+                          ) : (
                             <button
                               className="delete-button"
-                              disabled={busy === a.id}
+                              disabled={busy !== null}
                               onClick={() => remove(tab.toLowerCase(), a.id)}
                             >
-                              {busy === a.id
-                                ? "Removing…"
-                                : "Delete"}
+                              {busy === a.id ? "Deleting…" : "Delete"}
                             </button>
-                          ) : null}
+                          )}
                         </div>
                       ))
                     ) : (

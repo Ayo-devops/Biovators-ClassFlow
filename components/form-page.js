@@ -7,11 +7,15 @@ export default function FormPage({
   icon = "book",
   children,
   back = "/",
+  backLabel,
 }) {
+  const resolvedBackLabel =
+    backLabel || (back === "/admin" ? "admin workspace" : "overview");
+
   return (
     <>
       <Link className="back-link" href={back}>
-        ← Back to {back === "/admin" ? "admin workspace" : "overview"}
+        ← Back to {resolvedBackLabel}
       </Link>
       <div className="form-layout">
         <div className="form-intro">

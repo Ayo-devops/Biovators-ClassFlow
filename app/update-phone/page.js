@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import FormPage, { Field } from "../../components/form-page";
 import Icon from "../../components/icon";
 import { supabase } from "../../lib/supabase";
@@ -73,10 +74,11 @@ export default function UpdatePhonePage() {
 
   return (
     <FormPage
-      title="Keep your reminders within reach."
-      description="Verify your email, then add or replace the WhatsApp number on your registration."
-      icon="clock"
+      title="Changed your number? Keep ClassFlow with you."
+      description="Add or replace the WhatsApp number connected to your reminder registration—without registering again."
+      icon="bell"
       back="/register"
+      backLabel="reminder registration"
     >
       {checkingSession ? (
         <p role="status">Checking your verification…</p>
@@ -86,20 +88,34 @@ export default function UpdatePhonePage() {
             <Icon name="check" size={29} />
           </span>
           <h2>WhatsApp number updated</h2>
-          <p>Future ClassFlow reminders will use your new number.</p>
+          <p>
+            You’re all set. Future ClassFlow reminders will use your new
+            number.
+          </p>
+          <Link className="button secondary" href="/">
+            Return to ClassFlow
+          </Link>
         </div>
       ) : session ? (
         <>
-          <h2>Update WhatsApp number</h2>
-          <p>Your email has been verified. Enter the number you want to use.</p>
-          {error && <div className="notice error" role="alert">{error}</div>}
+          <p className="step-label">STEP 3 OF 3</p>
+          <h2>Add your current WhatsApp number</h2>
+          <p>
+            Your email is verified. Enter the phone number where you want to
+            receive future reminders.
+          </p>
+          {error && (
+            <div className="notice error" role="alert">
+              {error}
+            </div>
+          )}
           <form onSubmit={updatePhone}>
             <Field
               name="phone_number"
-              label="WhatsApp number"
+              label="WhatsApp or phone number"
               type="tel"
               autoComplete="tel"
-              placeholder="e.g. +2348012345678"
+              placeholder="e.g. 08012345678 or +2348012345678"
               required
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
@@ -108,6 +124,10 @@ export default function UpdatePhonePage() {
               {busy ? "Updating…" : "Update number"}
               <Icon name="arrow" size={17} />
             </button>
+            <p className="field-help">
+              Nigerian numbers beginning with 0 are converted to the +234
+              format automatically.
+            </p>
           </form>
         </>
       ) : linkSent ? (
@@ -116,13 +136,37 @@ export default function UpdatePhonePage() {
             <Icon name="check" size={29} />
           </span>
           <h2>Check your email</h2>
-          <p>Open the verification link, then return here to update your number.</p>
+          <p>
+            We sent a secure sign-in link to <strong>{email}</strong>. Open it
+            on this device to continue. The link confirms that the registration
+            belongs to you.
+          </p>
         </div>
       ) : (
         <>
+          <p className="step-label">STEP 1 OF 3</p>
           <h2>Verify your registration email</h2>
-          <p>We’ll email you a secure sign-in link before changing your number.</p>
-          {error && <div className="notice error" role="alert">{error}</div>}
+          <p>
+            Use the same email address you originally registered with. We’ll
+            send a secure link before allowing any number to be changed.
+          </p>
+          <div className="update-phone-guide" aria-label="How updating works">
+            <h3>How it works</h3>
+            <ol>
+              <li>Enter your registered email address.</li>
+              <li>Open the private verification link we send you.</li>
+              <li>Add your current WhatsApp or phone number.</li>
+            </ol>
+            <p>
+              This updates only your reminder number. Your name, email, and
+              existing registration stay the same.
+            </p>
+          </div>
+          {error && (
+            <div className="notice error" role="alert">
+              {error}
+            </div>
+          )}
           <form onSubmit={requestLink}>
             <Field
               name="email"
@@ -135,7 +179,7 @@ export default function UpdatePhonePage() {
               onChange={(event) => setEmail(event.target.value)}
             />
             <button className="button primary" disabled={busy} type="submit">
-              {busy ? "Sending…" : "Send verification link"}
+              {busy ? "Sending…" : "Email me a secure link"}
               <Icon name="arrow" size={17} />
             </button>
           </form>

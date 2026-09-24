@@ -50,6 +50,8 @@ Without service credentials, the UI still renders, data endpoints return HTTP 50
 - Calendar-day deadline grouping: assignments due today remain visible all day.
 - Shared accessible forms, browser validation, loading/error/success feedback.
 - Admin search and management with failed deletions preserved in the list.
+- Server-authorized announcement deletion for administrators.
+- A prominent, email-verified flow for adding or replacing reminder numbers.
 - Reduced-motion support, keyboard focus styles, 16px mobile inputs.
 
 ## Progressive web app
