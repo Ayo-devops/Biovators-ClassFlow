@@ -38,35 +38,43 @@ export default function Admin() {
       }
       setUser(session.user);
       setAccessToken(session.access_token);
-      const r =
-        session.user.app_metadata?.role ||
-        session.user.user_metadata?.role ||
-        "rep";
-      setRole(r);
-      const urls = [
-        "/api/assignments",
-        "/api/announcements",
-        ...(r === "admin" ? ["/api/students"] : []),
-      ];
-      const data = await Promise.all(
-        urls.map(async (url) => {
-          const response = await fetch(url, {
-            headers:
-              url === "/api/students"
-                ? { Authorization: `Bearer ${session.access_token}` }
-                : undefined,
-          });
-          if (!response.ok)
-            throw Error("Could not load workspace data. Please try again.");
-          const json = await response.json();
-          if (!Array.isArray(json))
-            throw Error("Unexpected response. Please try again.");
-          return json;
-        }),
-      );
-      setAssignments(data[0]);
-      setAnnouncements(data[1]);
-      if (data[2]) setStudents(data[2]);
+      const [assignmentsResponse, announcementsResponse, studentsResponse] =
+        await Promise.all([
+          fetch("/api/assignments"),
+          fetch("/api/announcements"),
+          fetch("/api/students", {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }),
+        ]);
+
+      if (!assignmentsResponse.ok || !announcementsResponse.ok) {
+        throw Error("Could not load workspace data. Please try again.");
+      }
+
+      const [assignmentData, announcementData] = await Promise.all([
+        assignmentsResponse.json(),
+        announcementsResponse.json(),
+      ]);
+      if (!Array.isArray(assignmentData) || !Array.isArray(announcementData)) {
+        throw Error("Unexpected response. Please try again.");
+      }
+
+      let resolvedRole = "rep";
+      let studentData = [];
+      if (studentsResponse.ok) {
+        studentData = await studentsResponse.json();
+        if (!Array.isArray(studentData)) {
+          throw Error("Unexpected response. Please try again.");
+        }
+        resolvedRole = "admin";
+      } else if (![401, 403].includes(studentsResponse.status)) {
+        throw Error("Could not load workspace data. Please try again.");
+      }
+
+      setRole(resolvedRole);
+      setAssignments(assignmentData);
+      setAnnouncements(announcementData);
+      setStudents(studentData);
     } catch (e) {
       setError(e.message);
     } finally {
