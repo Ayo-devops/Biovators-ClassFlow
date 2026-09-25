@@ -352,6 +352,12 @@ export default function Admin() {
                       ...(role === "admin"
                         ? [
                             {
+                              href: "/admin/test-delivery",
+                              title: "Test one-student delivery",
+                              text: "Send a private test assignment by email and WhatsApp.",
+                              icon: "send",
+                            },
+                            {
                               href: "/admin/invite",
                               title: "Build your class team",
                               text: "Invite an admin or course representative.",

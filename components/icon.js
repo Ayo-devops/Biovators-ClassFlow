@@ -16,6 +16,7 @@ export default function Icon({ name = "grid", size = 20 }) {
     download: "M12 3v12 M7 10l5 5 5-5 M4 16v5h16v-5",
     check: "M5 12l4 4L19 6",
     shield: "M12 2l9 4v6c0 5-9 10-9 10S3 17 3 12V6z M8 12l3 3 5-6",
+    send: "M22 2L11 13 M22 2l-7 20-4-9-9-4z",
   };
   return (
     <svg

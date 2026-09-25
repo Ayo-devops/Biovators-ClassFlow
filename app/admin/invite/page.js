@@ -11,7 +11,7 @@ export default function Invite() {
     [email, setEmail] = useState(""),
     [inviteRole, setInviteRole] = useState("rep"),
     [error, setError] = useState(""),
-    [success, setSuccess] = useState(false),
+    [success, setSuccess] = useState(""),
     [loading, setLoading] = useState(false);
   useEffect(() => {
     async function auth() {
@@ -54,7 +54,7 @@ export default function Invite() {
   async function invite(e) {
     e.preventDefault();
     setError("");
-    setSuccess(false);
+    setSuccess("");
     setLoading(true);
     try {
       const r = await fetch("/api/invite", {
@@ -72,7 +72,7 @@ export default function Invite() {
             ? data.error
             : "Could not send the invite.",
         );
-      setSuccess(true);
+      setSuccess(data.message || "Invitation sent successfully.");
       setEmail("");
     } catch (e) {
       setError(e.message);
@@ -96,7 +96,7 @@ export default function Invite() {
       )}
       {success && (
         <div className="notice success" role="status">
-          Invitation sent. Ask your teammate to check their inbox.
+          {success}
         </div>
       )}
       {!role && !error ? (

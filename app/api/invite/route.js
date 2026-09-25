@@ -25,19 +25,45 @@ export async function POST(request) {
     );
   try {
     const { email, role } = await request.json();
-    if (!email || !["admin", "rep"].includes(role)) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail || !["admin", "rep"].includes(role)) {
       return Response.json(
         { error: "A valid email and workspace role are required." },
         { status: 400 },
       );
     }
 
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { role },
-    });
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(
+      normalizedEmail,
+      { data: { role } },
+    );
 
-    if (error) return Response.json({ error: error.message }, { status: 500 });
-    const invitedUser = data.user;
+    let invitedUser = data?.user;
+    let existing = false;
+    if (error) {
+      // Supabase does not provide a get-user-by-email admin endpoint. If the
+      // invite failed because the account already exists, find it safely and
+      // promote its app role instead of rejecting the administrator's action.
+      const perPage = 1000;
+      for (let page = 1; page <= 100 && !invitedUser; page += 1) {
+        const result = await supabase.auth.admin.listUsers({ page, perPage });
+        if (result.error) {
+          return Response.json(
+            { error: result.error.message },
+            { status: 500 },
+          );
+        }
+        invitedUser = result.data.users.find(
+          (user) => user.email?.toLowerCase() === normalizedEmail,
+        );
+        if (result.data.users.length < perPage) break;
+      }
+      if (!invitedUser) {
+        return Response.json({ error: error.message }, { status: 500 });
+      }
+      existing = true;
+    }
+
     if (!invitedUser) {
       return Response.json(
         { error: "The invitation did not create a user." },
@@ -53,7 +79,13 @@ export async function POST(request) {
       return Response.json({ error: roleError.message }, { status: 500 });
     }
 
-    return Response.json({ success: true });
+    return Response.json({
+      success: true,
+      existing,
+      message: existing
+        ? "Existing account access updated successfully."
+        : "Invitation sent successfully.",
+    });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
