@@ -1166,13 +1166,26 @@ button {
   display: grid;
   gap: 18px;
 }
-.admin-overview > a {
+.admin-overview > a,
+.admin-overview > button {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid var(--border);
   padding: 20px;
   border-radius: 9px;
+}
+.admin-overview > button {
+  width: 100%;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-overview > button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 .admin-overview h3 {
   font-weight: 600;
@@ -1181,6 +1194,36 @@ button {
   font-size: 12px;
   color: #596b53;
   margin-top: 5px;
+}
+.reminder-preview {
+  margin: 0 22px 22px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfcf9;
+}
+.reminder-preview > p {
+  margin-bottom: 18px;
+  color: #596b53;
+  font-size: 13px;
+}
+.reminder-preview h3 {
+  margin: 16px 0 7px;
+  font-size: 12px;
+}
+.reminder-preview pre {
+  margin: 0;
+  padding: 14px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  border-radius: 7px;
+  background: #f1f4ed;
+  color: #293426;
+  font:
+    12px/1.6 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 @media (min-width: 1450px) {
   .page-content {
@@ -1322,7 +1365,9 @@ button {
   }
 }
 @media (max-width: 700px) {
-  .desktop-only { display: none; }
+  .desktop-only {
+    display: none;
+  }
   html {
     scroll-padding-top: 85px;
   }

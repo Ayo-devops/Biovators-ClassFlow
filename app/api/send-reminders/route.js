@@ -119,6 +119,36 @@ function preview(context, studentId) {
   };
 }
 
+function samplePreview() {
+  const deadline = new Date();
+  deadline.setDate(deadline.getDate() + 3);
+  const assignment = {
+    course_title: "Sample Course",
+    assignment_title: "Practice Assignment",
+    lecturer_name: "Sample Lecturer",
+    deadline_date: deadline.toISOString().split("T")[0],
+    submission_method: "LMS",
+    priority: "Medium",
+    description:
+      "This is a preview only. No assignment was created and nothing was sent.",
+  };
+  const subject = "[ClassFlow] Due in 3 Days";
+
+  return {
+    dryRun: true,
+    sample: true,
+    target: "preview_only",
+    students: 1,
+    assignments: 1,
+    deliveries: 2,
+    email: {
+      subject: `${subject} - ${assignment.assignment_title}`,
+      summary: "One reminder email would be prepared for the selected student.",
+    },
+    whatsapp: assignmentMessage(assignment, subject),
+  };
+}
+
 async function deliver(context) {
   const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   const results = { emails: 0, whatsapp: 0, skipped: 0, failures: [] };
@@ -184,6 +214,10 @@ export async function GET(request) {
     allowReminderKey: true,
   });
   if (authorization.error) return authorization.error;
+  const searchParams = new URL(request.url).searchParams;
+  if (searchParams.get("sample") === "true") {
+    return Response.json(samplePreview());
+  }
   if (!supabase) {
     return Response.json(
       { error: "Class data is not configured yet." },
@@ -192,7 +226,7 @@ export async function GET(request) {
   }
 
   try {
-    const studentId = new URL(request.url).searchParams.get("studentId");
+    const studentId = searchParams.get("studentId");
     const context = await loadReminderContext(studentId);
     return Response.json(preview(context, studentId));
   } catch (error) {

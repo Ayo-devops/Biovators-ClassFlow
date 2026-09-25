@@ -1,11 +1,14 @@
-import { authorizeAdmin } from "../../../../lib/admin-auth";
+import {
+  authorizeAdmin,
+  authorizeWorkspaceMember,
+} from "../../../../lib/admin-auth";
 import {
   listWhatsAppGroups,
   sendWhatsAppGroup,
 } from "../../../../lib/whatsapp-server";
 
 export async function GET(request) {
-  const authorization = await authorizeAdmin(request);
+  const authorization = await authorizeWorkspaceMember(request);
   if (authorization.error) return authorization.error;
 
   try {
@@ -30,7 +33,9 @@ export async function POST(request) {
       message.length > 4096
     ) {
       return Response.json(
-        { error: "Choose a group and enter a message of up to 4096 characters." },
+        {
+          error: "Choose a group and enter a message of up to 4096 characters.",
+        },
         { status: 400 },
       );
     }

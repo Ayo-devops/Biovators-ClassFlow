@@ -18,7 +18,8 @@ export default function Admin() {
     [tab, setTab] = useState("Overview"),
     [query, setQuery] = useState(""),
     [busy, setBusy] = useState(null),
-    [reminderNotice, setReminderNotice] = useState("");
+    [reminderNotice, setReminderNotice] = useState(""),
+    [samplePreview, setSamplePreview] = useState(null);
   const load = useCallback(async () => {
     try {
       if (!supabase) {
@@ -169,6 +170,24 @@ export default function Admin() {
       setBusy(null);
     }
   }
+  async function previewSampleReminder() {
+    setBusy("sample-preview");
+    setError("");
+    setReminderNotice("");
+    try {
+      const response = await fetch("/api/send-reminders?sample=true", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error || "Preview request failed.");
+      setSamplePreview(data);
+    } catch (previewError) {
+      setError(previewError.message);
+    } finally {
+      setBusy(null);
+    }
+  }
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -315,40 +334,79 @@ export default function Admin() {
                 ))}
               </div>
               {tab === "Overview" ? (
-                <div className="admin-overview">
-                  {[
-                    {
-                      href: "/submit",
-                      title: "Give your class a head start",
-                      text: "Add a new assignment and its deadline.",
-                      icon: "book",
-                    },
-                    {
-                      href: "/announce",
-                      title: "Keep everyone in the loop",
-                      text: "Post a class update to the noticeboard.",
-                      icon: "bell",
-                    },
-                    ...(role === "admin"
-                      ? [
-                          {
-                            href: "/admin/invite",
-                            title: "Build your class team",
-                            text: "Invite an admin or course representative.",
-                            icon: "users",
-                          },
-                        ]
-                      : []),
-                  ].map((a) => (
-                    <Link key={a.href} href={a.href}>
-                      <div>
-                        <h3>{a.title}</h3>
-                        <p>{a.text}</p>
+                <>
+                  <div className="admin-overview">
+                    {[
+                      {
+                        href: "/submit",
+                        title: "Give your class a head start",
+                        text: "Add a new assignment and its deadline.",
+                        icon: "book",
+                      },
+                      {
+                        href: "/announce",
+                        title: "Keep everyone in the loop",
+                        text: "Post a class update to the noticeboard.",
+                        icon: "bell",
+                      },
+                      ...(role === "admin"
+                        ? [
+                            {
+                              href: "/admin/invite",
+                              title: "Build your class team",
+                              text: "Invite an admin or course representative.",
+                              icon: "users",
+                            },
+                          ]
+                        : []),
+                    ].map((a) => (
+                      <Link key={a.href} href={a.href}>
+                        <div>
+                          <h3>{a.title}</h3>
+                          <p>{a.text}</p>
+                        </div>
+                        <Icon name={a.icon} />
+                      </Link>
+                    ))}
+                    {role === "admin" && (
+                      <button
+                        type="button"
+                        onClick={previewSampleReminder}
+                        disabled={busy !== null}
+                      >
+                        <div>
+                          <h3>Preview a test reminder</h3>
+                          <p>No assignment is created and nothing is sent.</p>
+                        </div>
+                        <Icon name="eye" />
+                      </button>
+                    )}
+                  </div>
+                  {samplePreview && (
+                    <div className="reminder-preview" role="status">
+                      <div className="section-heading">
+                        <div>
+                          <p className="eyebrow">SAFE PREVIEW</p>
+                          <h2>Sample reminder</h2>
+                        </div>
+                        <button
+                          className="text-button"
+                          onClick={() => setSamplePreview(null)}
+                        >
+                          Close
+                        </button>
                       </div>
-                      <Icon name={a.icon} />
-                    </Link>
-                  ))}
-                </div>
+                      <p>
+                        This uses sample data only. No database record was
+                        created and no email or WhatsApp message was sent.
+                      </p>
+                      <h3>Email subject</h3>
+                      <pre>{samplePreview.email.subject}</pre>
+                      <h3>WhatsApp message</h3>
+                      <pre>{samplePreview.whatsapp}</pre>
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
                   <div className="section-heading">

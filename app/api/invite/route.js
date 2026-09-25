@@ -9,6 +9,12 @@ const supabase =
       )
     : null;
 
+export async function GET(request) {
+  const authorization = await authorizeAdmin(request);
+  if (authorization.error) return authorization.error;
+  return Response.json({ role: "admin" });
+}
+
 export async function POST(request) {
   const authorization = await authorizeAdmin(request);
   if (authorization.error) return authorization.error;
@@ -33,7 +39,10 @@ export async function POST(request) {
     if (error) return Response.json({ error: error.message }, { status: 500 });
     const invitedUser = data.user;
     if (!invitedUser) {
-      return Response.json({ error: "The invitation did not create a user." }, { status: 500 });
+      return Response.json(
+        { error: "The invitation did not create a user." },
+        { status: 500 },
+      );
     }
 
     const { error: roleError } = await supabase.auth.admin.updateUserById(

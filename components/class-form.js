@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import FormPage, { Field } from "./form-page";
 import Icon from "./icon";
+import { supabase } from "../lib/supabase";
 const configs = {
   register: {
     title: "A little reminder. A lot less worry.",
@@ -91,27 +92,116 @@ export default function ClassForm({ kind }) {
   const [form, setForm] = useState(initial),
     [loading, setLoading] = useState(false),
     [error, setError] = useState(""),
-    [success, setSuccess] = useState(false);
-  const [unlocked, setUnlocked] = useState(kind === "register"),
+    [success, setSuccess] = useState(false),
+    [resultNotice, setResultNotice] = useState(""),
+    [resultWarning, setResultWarning] = useState(false);
+  const [unlocked, setUnlocked] = useState(
+      kind === "register" || kind === "announce",
+    ),
     [password, setPassword] = useState("");
+  const [accessToken, setAccessToken] = useState(""),
+    [authChecking, setAuthChecking] = useState(kind === "announce"),
+    [groups, setGroups] = useState([]),
+    [whatsappGroupId, setWhatsappGroupId] = useState("");
+
+  useEffect(() => {
+    if (kind !== "announce") return;
+
+    async function loadAnnouncementAccess() {
+      if (!supabase) {
+        setError("Sign-in is not configured yet.");
+        setAuthChecking(false);
+        return;
+      }
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (!data.session) {
+          setAuthChecking(false);
+          return;
+        }
+
+        const token = data.session.access_token;
+        setAccessToken(token);
+        const response = await fetch("/api/whatsapp/groups", {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        const responseData = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            responseData.error || "Could not load WhatsApp groups.",
+          );
+        }
+        setGroups(
+          Array.isArray(responseData.groups) ? responseData.groups : [],
+        );
+      } catch (accessError) {
+        setError(accessError.message);
+      } finally {
+        setAuthChecking(false);
+      }
+    }
+
+    loadAnnouncementAccess();
+  }, [kind]);
+
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   async function submit(e) {
     e.preventDefault();
+    if (kind === "announce" && whatsappGroupId) {
+      const group = groups.find((item) => item.id === whatsappGroupId);
+      if (!group) {
+        setError("Choose an available WhatsApp group.");
+        return;
+      }
+      if (
+        !window.confirm(
+          `Post this announcement and send it to “${group.name}” on WhatsApp?`,
+        )
+      ) {
+        return;
+      }
+    }
     setLoading(true);
     setError("");
+    setResultNotice("");
+    setResultWarning(false);
     try {
       const r = await fetch(c.endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({
+          ...form,
+          ...(kind === "announce"
+            ? { whatsapp_group_id: whatsappGroupId }
+            : {}),
+        }),
       });
+      const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        const data = await r.json().catch(() => ({}));
         throw Error(
           typeof data.error === "string"
             ? data.error
             : data.error?.message || "We couldn’t save this. Please try again.",
         );
+      }
+      if (kind === "announce") {
+        if (data.warning) {
+          setResultNotice(data.warning);
+          setResultWarning(true);
+        } else if (data.delivery?.whatsappSent) {
+          setResultNotice(
+            `The announcement was also sent to ${data.delivery.whatsappGroup} on WhatsApp.`,
+          );
+        } else {
+          setResultNotice(
+            "The announcement was posted without group delivery.",
+          );
+        }
       }
       setSuccess(true);
     } catch (err) {
@@ -126,7 +216,14 @@ export default function ClassForm({ kind }) {
   }
   return (
     <FormPage title={c.title} description={c.description} icon={c.icon}>
-      {!unlocked ? (
+      {kind === "announce" && authChecking ? (
+        <p role="status">Checking workspace access…</p>
+      ) : kind === "announce" && !accessToken ? (
+        <div className="notice error" role="alert">
+          Sign in to the admin workspace before posting an announcement.{" "}
+          <Link href="/admin/login">Sign in</Link>
+        </div>
+      ) : !unlocked ? (
         <>
           <h2>Course rep access</h2>
           <p>Enter your class access password to continue.</p>
@@ -165,6 +262,11 @@ export default function ClassForm({ kind }) {
           </span>
           <h2>{c.success}</h2>
           <p>{c.successBody}</p>
+          {resultNotice && (
+            <div className={`notice ${resultWarning ? "error" : "success"}`}>
+              {resultNotice}
+            </div>
+          )}
           <Link href="/" className="button primary">
             Back to overview <Icon name="arrow" size={17} />
           </Link>
@@ -173,6 +275,9 @@ export default function ClassForm({ kind }) {
               className="text-button"
               onClick={() => {
                 setForm(initial);
+                setWhatsappGroupId("");
+                setResultNotice("");
+                setResultWarning(false);
                 setSuccess(false);
               }}
             >
@@ -217,6 +322,21 @@ export default function ClassForm({ kind }) {
                 }
               />
             ))}
+            {kind === "announce" && (
+              <Field
+                name="whatsapp_group_id"
+                label="WhatsApp group delivery (optional)"
+                options={[
+                  { value: "", label: "Noticeboard and email only" },
+                  ...groups.map((group) => ({
+                    value: group.id,
+                    label: group.name,
+                  })),
+                ]}
+                value={whatsappGroupId}
+                onChange={(event) => setWhatsappGroupId(event.target.value)}
+              />
+            )}
             <button className="button primary" disabled={loading} type="submit">
               {loading ? "Saving…" : c.button}
               <Icon name="arrow" size={17} />

@@ -30,11 +30,21 @@ export default function Invite() {
           return;
         }
         setAccessToken(session.access_token);
-        setRole(
-          session.user.app_metadata?.role ||
-            session.user.user_metadata?.role ||
-            "rep",
-        );
+        const response = await fetch("/api/invite", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store",
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          if ([401, 403].includes(response.status)) {
+            setRole("rep");
+            return;
+          }
+          throw new Error(
+            data.error || "Could not verify administrator access.",
+          );
+        }
+        setRole(data.role);
       } catch (e) {
         setError(e.message);
       }
