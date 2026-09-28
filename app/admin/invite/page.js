@@ -88,7 +88,10 @@ export default function Invite() {
       back="/admin"
     >
       <h2>Invite a teammate</h2>
-      <p>They’ll receive an email with their next steps.</p>
+      <p>
+        They’ll receive a secure email link to choose a password and open their
+        workspace.
+      </p>
       {error && (
         <div className="notice error" role="alert">
           {error}
