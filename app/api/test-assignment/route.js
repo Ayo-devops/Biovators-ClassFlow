@@ -22,7 +22,7 @@ function escapeHtml(value) {
 
 function messageFor(assignment) {
   return (
-    "[ClassFlow TEST] Assignment delivery\n\n" +
+    "[ClassFlow for Biovators · TEST] Assignment delivery\n\n" +
     `Course: ${assignment.course_title}\n` +
     `Assignment: ${assignment.assignment_title}\n` +
     `Lecturer: ${assignment.lecturer_name}\n` +
@@ -30,14 +30,14 @@ function messageFor(assignment) {
     `Submission: ${assignment.submission_method}\n` +
     `Priority: ${assignment.priority}` +
     (assignment.description ? `\n\n${assignment.description}` : "") +
-    "\n\nThis is a private delivery test. It was not published to the class.\n\n— ClassFlow"
+    "\n\nThis is a private delivery test. It was not published to Biovators.\n\n— ClassFlow for Biovators"
   );
 }
 
 function emailFor(assignment, student) {
   return (
     `<p>Hi ${escapeHtml(student.student_name)},</p>` +
-    "<p><strong>This is a private ClassFlow delivery test.</strong> It was not published to the class.</p>" +
+    "<p><strong>This is a private ClassFlow delivery test.</strong> It was not published to Biovators.</p>" +
     `<p><b>Course:</b> ${escapeHtml(assignment.course_title)}</p>` +
     `<p><b>Assignment:</b> ${escapeHtml(assignment.assignment_title)}</p>` +
     `<p><b>Lecturer:</b> ${escapeHtml(assignment.lecturer_name)}</p>` +
@@ -47,7 +47,7 @@ function emailFor(assignment, student) {
     (assignment.description
       ? `<p><b>Description:</b></p><p>${escapeHtml(assignment.description).replaceAll("\n", "<br/>")}</p>`
       : "") +
-    "<br/><p>— ClassFlow</p>"
+    "<br/><p>— ClassFlow for Biovators</p>"
   );
 }
 
@@ -110,7 +110,7 @@ export async function POST(request) {
     const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
     try {
       await brevo.transactionalEmails.sendTransacEmail({
-        sender: { name: "ClassFlow", email: "akoredeayomide099@gmail.com" },
+        sender: { name: "ClassFlow for Biovators", email: "akoredeayomide099@gmail.com" },
         to: [{ email: student.student_email, name: student.student_name }],
         subject: `[ClassFlow TEST] ${assignment.assignment_title}`,
         htmlContent: emailFor(assignment, student),

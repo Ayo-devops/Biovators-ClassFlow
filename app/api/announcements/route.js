@@ -46,13 +46,6 @@ export async function POST(request) {
     const postedBy = body.posted_by?.trim();
     const whatsappGroupId = body.whatsapp_group_id?.trim() || "";
 
-    if (whatsappGroupId && authorization.actor === "rep") {
-      return Response.json(
-        { error: "Only administrators can send announcements to WhatsApp groups." },
-        { status: 403 },
-      );
-    }
-
     if (!title || !announcementBody || !postedBy) {
       return Response.json(
         { error: "Title, message, and posted-by name are required." },
@@ -89,7 +82,7 @@ export async function POST(request) {
         } else {
           await sendWhatsAppGroup(
             whatsappGroup.id,
-            `[ClassFlow] Announcement\n\n${announcement.title}\n\n${announcement.body}\n\nPosted by: ${announcement.posted_by}\n\n— ClassFlow`,
+            `[ClassFlow for Biovators] Announcement\n\n${announcement.title}\n\n${announcement.body}\n\nPosted by: ${announcement.posted_by}\n\n— ClassFlow for Biovators`,
           );
         }
       } catch (whatsappError) {
@@ -105,7 +98,7 @@ export async function POST(request) {
           "<p>Hi " +
           student.student_name +
           ",</p>" +
-          "<p>A new announcement has been posted on ClassFlow.</p>" +
+          "<p>We have a new announcement on ClassFlow for Biovators.</p>" +
           "<br/>" +
           "<p><b>" +
           announcement.title +
@@ -118,10 +111,10 @@ export async function POST(request) {
           announcement.posted_by +
           "</p>" +
           "<br/>" +
-          "<p>-- ClassFlow</p>";
+          "<p>— ClassFlow for Biovators</p>";
 
         await brevo.transactionalEmails.sendTransacEmail({
-          sender: { name: "ClassFlow", email: "akoredeayomide099@gmail.com" },
+          sender: { name: "ClassFlow for Biovators", email: "akoredeayomide099@gmail.com" },
           to: [{ email: student.student_email, name: student.student_name }],
           subject: "[ClassFlow] Announcement — " + announcement.title,
           htmlContent: emailHtml,

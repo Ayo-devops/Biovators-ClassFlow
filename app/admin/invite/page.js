@@ -82,8 +82,8 @@ export default function Invite() {
   }
   return (
     <FormPage
-      title="Good classes take a team."
-      description="Invite a course representative or another admin to help keep things running smoothly."
+      title="Our collective works better together."
+      description="Invite a course representative or another admin to help keep Biovators running smoothly."
       icon="users"
       back="/admin"
     >

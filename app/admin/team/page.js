@@ -80,8 +80,8 @@ export default function TeamAccessPage() {
 
   return (
     <FormPage
-      title="Keep workspace access intentional."
-      description="Only the Super Admin can invite teammates, review roles, or revoke workspace access."
+      title="Keep our workspace access intentional."
+      description="Only the Super Admin can invite our teammates, review roles, or revoke workspace access."
       icon="shield"
       back="/admin"
     >

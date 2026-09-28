@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    default: "ClassFlow — Your class, connected",
+    default: "ClassFlow — Biovators, connected",
     template: "%s | ClassFlow",
   },
   description:
-    "Your assignments, deadlines and class announcements in one calm workspace.",
+    "Our Biovators assignments, deadlines, and announcements in one calm workspace.",
   applicationName: "ClassFlow",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "ClassFlow" },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },

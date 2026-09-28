@@ -78,7 +78,7 @@ function assignmentMessage(assignment, subjectPrefix) {
     `Submission: ${assignment.submission_method}\n` +
     `Priority: ${assignment.priority}` +
     (assignment.description ? `\n\n${assignment.description}` : "") +
-    `\n\n— ClassFlow`
+    `\n\n— ClassFlow for Biovators`
   );
 }
 
@@ -95,7 +95,7 @@ function assignmentEmail(assignment, student, messageLine) {
     (assignment.description
       ? `<p><b>Description:</b></p><p>${assignment.description.replace(/\n/g, "<br/>")}</p>`
       : "") +
-    `<br/><p>-- ClassFlow</p>`
+    `<br/><p>— ClassFlow for Biovators</p>`
   );
 }
 
@@ -160,7 +160,7 @@ async function deliver(context) {
           try {
             await brevo.transactionalEmails.sendTransacEmail({
               sender: {
-                name: "ClassFlow",
+                name: "ClassFlow for Biovators",
                 email: "akoredeayomide099@gmail.com",
               },
               to: [

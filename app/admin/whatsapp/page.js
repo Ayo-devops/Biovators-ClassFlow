@@ -94,13 +94,16 @@ export default function WhatsAppAdminPage() {
 
   return (
     <FormPage
-      title="Reach the whole class on WhatsApp."
-      description="Choose a WhatsApp group, review your announcement, and send it from the connected ClassFlow bot."
+      title="Reach Biovators on WhatsApp."
+      description="Choose one of our WhatsApp groups, review the message, and send it from our connected ClassFlow bot."
       icon="users"
       back="/admin"
     >
       <h2>Send to a WhatsApp group</h2>
-      <p>Only administrators can access this page. You will confirm every message before it is sent.</p>
+      <p>
+        Administrators and course representatives can send here. We’ll always
+        ask you to confirm the group before a message leaves ClassFlow.
+      </p>
 
       {error && <div className="notice error" role="alert">{error}</div>}
       {success && <div className="notice success" role="status">{success}</div>}
@@ -123,7 +126,7 @@ export default function WhatsAppAdminPage() {
             multiline
             required
             maxLength={4096}
-            placeholder="Write the message your group should receive…"
+            placeholder="Write the message our group should receive…"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
           />
@@ -134,7 +137,7 @@ export default function WhatsAppAdminPage() {
         </form>
       ) : (
         <div className="notice">
-          The bot is connected, but it is not currently a member of any WhatsApp groups.
+          Our bot is connected, but it is not currently a member of any WhatsApp groups.
         </div>
       )}
     </FormPage>

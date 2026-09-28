@@ -23,7 +23,7 @@ export default function Shell({ children }) {
           </span>
           ClassFlow.
         </Link>
-        <div className="workspace-label">YOUR CLASS, CONNECTED</div>
+        <div className="workspace-label">BIOVATORS, CONNECTED</div>
         <nav aria-label="Main navigation">
           {links.map((l) => (
             <Link
@@ -44,7 +44,7 @@ export default function Shell({ children }) {
             headspace.
           </h3>
           <p>
-            Keep your deadlines in one place. Make room for everything else.
+            Keep our deadlines in one place. Make room for everything else.
           </p>
           <Link href="/register">
             Get reminders <Icon name="arrow" size={16} />
@@ -59,7 +59,7 @@ export default function Shell({ children }) {
             <Icon name="shield" />
             Admin workspace
           </Link>
-          <p>Made for your next chapter.</p>
+          <p>Made for our next chapter.</p>
         </div>
       </aside>
       <div className="main-wrap">
@@ -71,8 +71,8 @@ export default function Shell({ children }) {
             ClassFlow.
           </Link>
           <span className="desktop-breadcrumb">
-            Your workspace <span>/</span>{" "}
-            {path.startsWith("/admin") ? "Administration" : "Classroom"}
+            Our workspace <span>/</span>{" "}
+            {path.startsWith("/admin") ? "Administration" : "Biovators"}
           </span>
           <Link className="topbar-link" href="/register">
             <Icon name="bell" size={18} />
@@ -84,9 +84,9 @@ export default function Shell({ children }) {
           {children}
         </main>
         <footer className="page-footer">
-          <span>ClassFlow</span>
+          <span>ClassFlow · Biovators, connected.</span>
           <Link href="/admin">Admin workspace ↗</Link>
-          <span>A clearer day starts here.</span>
+          <span>A clearer day starts with us.</span>
         </footer>
       </div>
       <nav className="mobile-nav" aria-label="Mobile navigation">

@@ -69,11 +69,11 @@ export default function Dashboard() {
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">LET’S MAKE ROOM FOR LEARNING</p>
+          <p className="eyebrow">BIOVATORS, LET’S MAKE ROOM FOR LEARNING</p>
           <h1>
-            Your day, a little clearer<span>.</span>
+            Our day, a little clearer<span>.</span>
           </h1>
-          <p>All your deadlines and class updates. One less thing to juggle.</p>
+          <p>All our deadlines and updates. One less thing for us to juggle.</p>
         </div>
         <Link className="button primary" href="/submit">
           <Icon name="plus" size={18} />
@@ -84,7 +84,7 @@ export default function Dashboard() {
         <div>
           <span className="hero-tag">
             <span />
-            YOUR CLASSROOM COMPANION
+            OUR BIOVATORS COMPANION
           </span>
           <h2>
             Big plans.
@@ -92,7 +92,7 @@ export default function Dashboard() {
             Small, manageable steps.
           </h2>
           <p>
-            See what’s coming up, focus on what matters,
+            We can see what’s coming up, focus on what matters,
             <br className="desktop-only" /> and take the week one assignment at
             a time.
           </p>
@@ -145,14 +145,14 @@ export default function Dashboard() {
             value: week.length,
             icon: "calendar",
             tone: "green",
-            detail: "Your week, at a glance",
+            detail: "Our week, at a glance",
           },
           {
             label: "Class announcements",
             value: announcements.length,
             icon: "bell",
             tone: "purple",
-            detail: "Keep up with your classroom",
+            detail: "Keep up with Biovators",
           },
         ].map((s) => (
           <div className="stat-card" key={s.label}>
@@ -188,7 +188,7 @@ export default function Dashboard() {
         <section className="panel" id="assignments">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">YOUR TO-DO, TOGETHER</p>
+              <p className="eyebrow">OUR TO-DO, TOGETHER</p>
               <h2>
                 Assignments <span className="count">{assignments.length}</span>
               </h2>
@@ -298,7 +298,7 @@ export default function Dashboard() {
                   ? "No matching assignments"
                   : error
                     ? "Assignments are unavailable"
-                    : "A fresh page for your class"}
+                    : "A fresh page for Biovators"}
               </h3>
               <p>
                 {query ||
@@ -321,7 +321,7 @@ export default function Dashboard() {
           )}
           <div className="panel-foot">
             {loading
-              ? "Getting your class up to date…"
+              ? "Getting Biovators up to date…"
               : `${filtered.length} assignments`}
             <span>Small steps. Steady progress.</span>
           </div>
@@ -330,7 +330,7 @@ export default function Dashboard() {
           <section className="panel" id="announcements">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">WORD AROUND CLASS</p>
+                <p className="eyebrow">WORD AROUND BIOVATORS</p>
                 <h2>Noticeboard</h2>
               </div>
               <span className="stat-icon purple">
@@ -359,7 +359,7 @@ export default function Dashboard() {
                     ? "Class notices could not be loaded."
                     : "You’re all caught up."}
                 </p>
-                <span>Class news and important updates will live here.</span>
+                <span>Our news and important updates will live here.</span>
               </div>
             )}
             <Link className="panel-action" href="/announce">
@@ -376,8 +376,8 @@ export default function Dashboard() {
               Right when you need it.
             </h3>
             <p>
-              Join the reminder list, or keep an existing registration current
-              when your WhatsApp number changes.
+              Join our reminder list, or keep your registration current when
+              your WhatsApp number changes.
             </p>
             <div className="reminder-actions">
               <Link className="button primary" href="/register">

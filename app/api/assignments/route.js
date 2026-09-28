@@ -60,7 +60,7 @@ export async function POST(request) {
           "<p>Hi " +
           student.student_name +
           ",</p>" +
-          "<p>A new assignment has just been added to ClassFlow.</p>" +
+          "<p>We have a new assignment on ClassFlow for Biovators.</p>" +
           "<br/>" +
           "<p><b>Course:</b> " +
           assignment.course_title +
@@ -86,10 +86,10 @@ export async function POST(request) {
               "</p>"
             : "") +
           "<br/>" +
-          "<p>-- ClassFlow</p>";
+          "<p>— ClassFlow for Biovators</p>";
 
         await brevo.transactionalEmails.sendTransacEmail({
-          sender: { name: "ClassFlow", email: "akoredeayomide099@gmail.com" },
+          sender: { name: "ClassFlow for Biovators", email: "akoredeayomide099@gmail.com" },
           to: [{ email: student.student_email, name: student.student_name }],
           subject:
             "[ClassFlow] New Assignment - " + assignment.assignment_title,
@@ -99,7 +99,7 @@ export async function POST(request) {
 
         await sendWhatsApp(
           student.phone_number,
-          `[ClassFlow] New Assignment\n\n` +
+          `[ClassFlow for Biovators] New Assignment\n\n` +
             `Course: ${assignment.course_title}\n` +
             `Assignment: ${assignment.assignment_title}\n` +
             `Lecturer: ${assignment.lecturer_name}\n` +
@@ -107,7 +107,7 @@ export async function POST(request) {
             `Submission: ${assignment.submission_method}\n` +
             `Priority: ${assignment.priority}` +
             (assignment.description ? `\n\n${assignment.description}` : "") +
-            `\n\n— ClassFlow`,
+            `\n\n— ClassFlow for Biovators`,
         );
       } catch (emailError) {
         console.log("Email error:", emailError.message);

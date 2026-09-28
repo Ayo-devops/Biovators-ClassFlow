@@ -1,11 +1,11 @@
-import { authorizeAdmin } from "../../../../lib/admin-auth";
+import { authorizeWorkspaceMember } from "../../../../lib/admin-auth";
 import {
   listWhatsAppGroups,
   sendWhatsAppGroup,
 } from "../../../../lib/whatsapp-server";
 
 export async function GET(request) {
-  const authorization = await authorizeAdmin(request);
+  const authorization = await authorizeWorkspaceMember(request);
   if (authorization.error) return authorization.error;
 
   try {
@@ -17,7 +17,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const authorization = await authorizeAdmin(request);
+  const authorization = await authorizeWorkspaceMember(request);
   if (authorization.error) return authorization.error;
 
   try {

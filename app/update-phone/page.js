@@ -74,8 +74,8 @@ export default function UpdatePhonePage() {
 
   return (
     <FormPage
-      title="Changed your number? Keep ClassFlow with you."
-      description="Add or replace the WhatsApp number connected to your reminder registration—without registering again."
+      title="Changed your number? Stay connected with us."
+      description="Add or replace the WhatsApp number linked to our Biovators reminder list—without registering again."
       icon="bell"
       back="/register"
       backLabel="reminder registration"

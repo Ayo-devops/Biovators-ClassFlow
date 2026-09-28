@@ -22,13 +22,13 @@ export default function FormPage({
           <span className="intro-icon">
             <Icon name={icon} size={28} />
           </span>
-          <p className="eyebrow">YOUR CLASS, CONNECTED</p>
+          <p className="eyebrow">BIOVATORS, CONNECTED</p>
           <h1>{title}</h1>
           <p>{description}</p>
           <div className="form-tip">
-            A little organization goes a long way.
+            A little organization keeps all of us moving.
             <br />
-            ClassFlow keeps your class on the same page.
+            ClassFlow keeps Biovators on the same page.
           </div>
         </div>
         <div className="form-card">{children}</div>

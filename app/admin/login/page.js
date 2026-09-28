@@ -32,8 +32,8 @@ export default function AdminLogin() {
   }
   return (
     <FormPage
-      title="Welcome back, class leader."
-      description="A little behind-the-scenes care keeps the whole class moving. Sign in to your workspace."
+      title="Welcome back, Biovator."
+      description="The work we do behind the scenes keeps all of us moving. Sign in to our workspace."
       icon="shield"
     >
       <h2>Sign in to ClassFlow</h2>
@@ -70,7 +70,7 @@ export default function AdminLogin() {
         </button>
       </form>
       <p className="form-caption">
-        Use the account provided by your class administrator.
+        Use the account provided by our ClassFlow administrator.
       </p>
     </FormPage>
   );

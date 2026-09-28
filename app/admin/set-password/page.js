@@ -83,8 +83,8 @@ export default function SetPassword() {
 
   return (
     <FormPage
-      title="Finish joining ClassFlow."
-      description="Choose the password you’ll use to access the admin workspace."
+      title="Join the Biovators workspace."
+      description="Choose the password you’ll use to help manage our collective on ClassFlow."
       icon="shield"
       back="/admin/login"
       backLabel="sign in"

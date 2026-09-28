@@ -8,9 +8,9 @@ const configs = {
   register: {
     title: "A little reminder. A lot less worry.",
     description:
-      "Join your class reminder list and keep upcoming deadlines on your radar.",
-    heading: "Stay in the loop",
-    intro: "Your details, and you’re good to go.",
+      "Join our Biovators reminder list so we can stay ahead of every deadline together.",
+    heading: "Stay in our loop",
+    intro: "Add your details and we’ll keep you connected.",
     endpoint: "/api/students",
     button: "Register for reminders",
     icon: "bell",
@@ -26,14 +26,14 @@ const configs = {
     ],
     success: "You’re on the list!",
     successBody:
-      "Your reminder registration has been saved. Head back to see what’s coming up.",
+      "You’re now part of our reminder list. Head back to see what’s coming up for us.",
   },
   submit: {
-    title: "One assignment. Everyone up to date.",
+    title: "One assignment. All Biovators up to date.",
     description:
-      "Share the details once. Give your classmates a clear picture of what’s next.",
+      "Share the details once so all of us have a clear picture of what’s next.",
     heading: "Assignment details",
-    intro: "The essentials your class needs to get started.",
+    intro: "The essentials we need to get started.",
     endpoint: "/api/assignments",
     button: "Add assignment",
     icon: "book",
@@ -57,16 +57,16 @@ const configs = {
         "description",
         "Additional instructions",
         "textarea",
-        "Anything else the class should know?",
+        "Anything else we should know?",
       ],
     ],
     success: "Assignment added",
-    successBody: "The assignment is now on your class dashboard.",
+    successBody: "The assignment is now on our Biovators dashboard.",
   },
   announce: {
-    title: "Keep everyone in the know.",
+    title: "Keep Biovators in the know.",
     description:
-      "A change of plans, an important update, or a quick heads-up. Share it with your class.",
+      "Whether it’s a change of plans or a quick heads-up, share it with all of us.",
     heading: "Write an announcement",
     intro: "A clear message makes all the difference.",
     endpoint: "/api/announcements",
@@ -74,11 +74,11 @@ const configs = {
     icon: "bell",
     fields: [
       ["title", "Title", "text", "e.g. Tomorrow’s class has moved"],
-      ["body", "Message", "textarea", "What does your class need to know?"],
+      ["body", "Message", "textarea", "What do Biovators need to know?"],
       ["posted_by", "Posted by", "text", "Your name or course rep title"],
     ],
     success: "Announcement posted",
-    successBody: "Your update is now on the class noticeboard.",
+    successBody: "Your update is now on our Biovators noticeboard.",
   },
 };
 export default function ClassForm({ kind }) {
@@ -132,10 +132,7 @@ export default function ClassForm({ kind }) {
         }
         setWorkspaceRole(membership.role);
 
-        if (
-          kind === "announce" &&
-          ["super_admin", "admin"].includes(membership.role)
-        ) {
+        if (kind === "announce") {
           const response = await fetch("/api/whatsapp/groups", {
             headers: { Authorization: `Bearer ${token}` },
             cache: "no-store",
@@ -304,8 +301,7 @@ export default function ClassForm({ kind }) {
                 }
               />
             ))}
-            {kind === "announce" &&
-              ["super_admin", "admin"].includes(workspaceRole) && (
+            {kind === "announce" && workspaceRole && (
               <Field
                 name="whatsapp_group_id"
                 label="WhatsApp group delivery (optional)"
@@ -327,8 +323,8 @@ export default function ClassForm({ kind }) {
           </form>
           <p className="form-caption">
             {kind === "register"
-              ? "By registering, you agree to receive class assignment reminders."
-              : "Double-check your details before sharing with the class."}
+              ? "By registering, you agree to receive our Biovators assignment reminders."
+              : "Double-check the details before sharing with all of us."}
           </p>
           {kind === "register" && (
             <div className="existing-registration">

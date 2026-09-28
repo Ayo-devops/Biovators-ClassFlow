@@ -44,18 +44,18 @@ async function sendSetupEmail({ email, role, actionLink, existing }) {
   const roleName = role === "admin" ? "administrator" : "course representative";
   const safeLink = escapeHtml(actionLink);
   await brevo.transactionalEmails.sendTransacEmail({
-    sender: { name: "ClassFlow", email: "akoredeayomide099@gmail.com" },
+    sender: { name: "ClassFlow for Biovators", email: "akoredeayomide099@gmail.com" },
     to: [{ email }],
     subject: existing
-      ? "Complete your ClassFlow workspace access"
-      : "You’re invited to the ClassFlow workspace",
+      ? "Complete your Biovators workspace access"
+      : "You’re invited to the Biovators workspace",
     htmlContent:
       `<p>Hello,</p>` +
-      `<p>You have been granted <strong>${roleName}</strong> access to the ClassFlow workspace.</p>` +
+      `<p>You have been invited to help us as a <strong>${roleName}</strong> in the Biovators workspace on ClassFlow.</p>` +
       `<p><a href="${safeLink}" style="display:inline-block;padding:12px 18px;background:#1f6f5f;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">Set up workspace access</a></p>` +
       `<p>This secure link expires, so please complete setup promptly. After choosing a password, you will be taken to the admin workspace.</p>` +
       `<p>If you were not expecting this invitation, you can ignore this email.</p>` +
-      `<p>— ClassFlow</p>`,
+      `<p>— ClassFlow for Biovators</p>`,
   });
 }
 

@@ -88,7 +88,7 @@ export default function TestDelivery() {
     }
     if (
       !window.confirm(
-        `Send this private test assignment only to ${selectedStudent.student_name} by email and WhatsApp? It will not be saved or shown to the class.`,
+        `Send this private test assignment only to ${selectedStudent.student_name} by email and WhatsApp? It will not be saved or shown to Biovators.`,
       )
     ) {
       return;
@@ -116,13 +116,13 @@ export default function TestDelivery() {
 
   return (
     <FormPage
-      title="Test the full delivery flow."
-      description="Create a private test assignment for exactly one registered student. It goes to their email and WhatsApp only."
+      title="Test our full delivery flow."
+      description="Create a private test assignment for exactly one registered Biovator. It goes to their email and WhatsApp only."
       icon="send"
       back="/admin"
     >
       <h2>One-student test</h2>
-      <p>This test is not saved, published, or sent to the rest of the class.</p>
+      <p>This test is not saved, published, or sent to the rest of Biovators.</p>
       {error && (
         <div className="notice error" role="alert">
           {error}

@@ -241,31 +241,27 @@ export default function Admin() {
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">BEHIND EVERY CONNECTED CLASS</p>
+          <p className="eyebrow">BEHIND OUR CONNECTED COLLECTIVE</p>
           <h1>
-            Your admin workspace<span>.</span>
+            Our admin workspace<span>.</span>
           </h1>
           <p>
             {user
               ? `${user.email} · ${roleLabel}`
-              : "Keep your class organized, together."}
+              : "Keeping Biovators organized, together."}
           </p>
         </div>
         {user && (
           <div className="admin-actions">
-            {isAdmin && (
-              <>
-                <Link className="button secondary" href="/admin/whatsapp">
-                  <Icon name="users" size={16} />
-                  WhatsApp
-                </Link>
-                {isSuperAdmin && (
-                  <Link className="button primary" href="/admin/team">
-                    <Icon name="users" size={16} />
-                    Manage team
-                  </Link>
-                )}
-              </>
+            <Link className="button secondary" href="/admin/whatsapp">
+              <Icon name="users" size={16} />
+              WhatsApp
+            </Link>
+            {isSuperAdmin && (
+              <Link className="button primary" href="/admin/team">
+                <Icon name="users" size={16} />
+                Manage team
+              </Link>
             )}
             <button className="button secondary" onClick={signOut}>
               Sign out
@@ -356,14 +352,14 @@ export default function Admin() {
                     {[
                       {
                         href: "/submit",
-                        title: "Give your class a head start",
-                        text: "Add a new assignment and its deadline.",
+                        title: "Give Biovators a head start",
+                        text: "Add our next assignment and its deadline.",
                         icon: "book",
                       },
                       {
                         href: "/announce",
-                        title: "Keep everyone in the loop",
-                        text: "Post a class update to the noticeboard.",
+                        title: "Keep all of us in the loop",
+                        text: "Post a Biovators update to our noticeboard or WhatsApp group.",
                         icon: "bell",
                       },
                       ...(isAdmin

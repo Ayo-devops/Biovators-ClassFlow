@@ -1,9 +1,9 @@
 export default function manifest() {
   return {
     id: "/",
-    name: "ClassFlow — Your class, connected",
+    name: "ClassFlow — Biovators, connected",
     short_name: "ClassFlow",
-    description: "Assignments, deadlines and class updates in one place.",
+    description: "Our Biovators assignments, deadlines, and updates in one place.",
     start_url: "/",
     scope: "/",
     display: "standalone",
