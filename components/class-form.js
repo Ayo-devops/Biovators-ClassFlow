@@ -95,19 +95,16 @@ export default function ClassForm({ kind }) {
     [success, setSuccess] = useState(false),
     [resultNotice, setResultNotice] = useState(""),
     [resultWarning, setResultWarning] = useState(false);
-  const [unlocked, setUnlocked] = useState(
-      kind === "register" || kind === "announce",
-    ),
-    [password, setPassword] = useState("");
   const [accessToken, setAccessToken] = useState(""),
-    [authChecking, setAuthChecking] = useState(kind === "announce"),
+    [workspaceRole, setWorkspaceRole] = useState(""),
+    [authChecking, setAuthChecking] = useState(kind !== "register"),
     [groups, setGroups] = useState([]),
     [whatsappGroupId, setWhatsappGroupId] = useState("");
 
   useEffect(() => {
-    if (kind !== "announce") return;
+    if (kind === "register") return;
 
-    async function loadAnnouncementAccess() {
+    async function loadWorkspaceAccess() {
       if (!supabase) {
         setError("Sign-in is not configured yet.");
         setAuthChecking(false);
@@ -123,19 +120,36 @@ export default function ClassForm({ kind }) {
 
         const token = data.session.access_token;
         setAccessToken(token);
-        const response = await fetch("/api/whatsapp/groups", {
+        const membershipResponse = await fetch("/api/workspace/me", {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
-        const responseData = await response.json();
-        if (!response.ok) {
+        const membership = await membershipResponse.json();
+        if (!membershipResponse.ok) {
           throw new Error(
-            responseData.error || "Could not load WhatsApp groups.",
+            membership.error || "Workspace access is required.",
           );
         }
-        setGroups(
-          Array.isArray(responseData.groups) ? responseData.groups : [],
-        );
+        setWorkspaceRole(membership.role);
+
+        if (
+          kind === "announce" &&
+          ["super_admin", "admin"].includes(membership.role)
+        ) {
+          const response = await fetch("/api/whatsapp/groups", {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          });
+          const responseData = await response.json();
+          if (!response.ok) {
+            throw new Error(
+              responseData.error || "Could not load WhatsApp groups.",
+            );
+          }
+          setGroups(
+            Array.isArray(responseData.groups) ? responseData.groups : [],
+          );
+        }
       } catch (accessError) {
         setError(accessError.message);
       } finally {
@@ -143,7 +157,7 @@ export default function ClassForm({ kind }) {
       }
     }
 
-    loadAnnouncementAccess();
+    loadWorkspaceAccess();
   }, [kind]);
 
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -216,45 +230,13 @@ export default function ClassForm({ kind }) {
   }
   return (
     <FormPage title={c.title} description={c.description} icon={c.icon}>
-      {kind === "announce" && authChecking ? (
+      {kind !== "register" && authChecking ? (
         <p role="status">Checking workspace access…</p>
-      ) : kind === "announce" && !accessToken ? (
+      ) : kind !== "register" && !accessToken ? (
         <div className="notice error" role="alert">
-          Sign in to the admin workspace before posting an announcement.{" "}
+          Sign in to the admin workspace before publishing class content.{" "}
           <Link href="/admin/login">Sign in</Link>
         </div>
-      ) : !unlocked ? (
-        <>
-          <h2>Course rep access</h2>
-          <p>Enter your class access password to continue.</p>
-          {error && (
-            <div className="notice error" role="alert">
-              {error}
-            </div>
-          )}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (password === "classflow2026") {
-                setUnlocked(true);
-                setError("");
-              } else setError("That password doesn’t match. Please try again.");
-            }}
-          >
-            <Field
-              name="access_password"
-              label="Class password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button className="button primary" type="submit">
-              Continue <Icon name="arrow" size={17} />
-            </button>
-          </form>
-        </>
       ) : success ? (
         <div className="form-success" role="status">
           <span className="empty-icon">
@@ -322,7 +304,8 @@ export default function ClassForm({ kind }) {
                 }
               />
             ))}
-            {kind === "announce" && (
+            {kind === "announce" &&
+              ["super_admin", "admin"].includes(workspaceRole) && (
               <Field
                 name="whatsapp_group_id"
                 label="WhatsApp group delivery (optional)"

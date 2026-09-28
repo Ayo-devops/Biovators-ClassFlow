@@ -104,7 +104,7 @@ export default function Invite() {
       )}
       {!role && !error ? (
         <p role="status">Checking access…</p>
-      ) : role === "admin" ? (
+      ) : role === "super_admin" ? (
         <form onSubmit={invite}>
           <Field
             name="invite_email"
@@ -133,7 +133,7 @@ export default function Invite() {
       ) : (
         role && (
           <div className="notice error">
-            Only administrators can invite teammates.
+            Only the Super Admin can invite teammates.
           </div>
         )
       )}

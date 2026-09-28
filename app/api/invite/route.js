@@ -1,6 +1,6 @@
 import { BrevoClient } from "@getbrevo/brevo";
 import { createClient } from "@supabase/supabase-js";
-import { authorizeAdmin } from "../../../lib/admin-auth";
+import { authorizeSuperAdmin } from "../../../lib/admin-auth";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -11,9 +11,9 @@ const supabase =
     : null;
 
 export async function GET(request) {
-  const authorization = await authorizeAdmin(request);
+  const authorization = await authorizeSuperAdmin(request);
   if (authorization.error) return authorization.error;
-  return Response.json({ role: "admin" });
+  return Response.json({ role: "super_admin" });
 }
 
 async function findUserByEmail(email) {
@@ -60,7 +60,7 @@ async function sendSetupEmail({ email, role, actionLink, existing }) {
 }
 
 export async function POST(request) {
-  const authorization = await authorizeAdmin(request);
+  const authorization = await authorizeSuperAdmin(request);
   if (authorization.error) return authorization.error;
   if (!supabase || !process.env.BREVO_API_KEY)
     return Response.json(

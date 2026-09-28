@@ -39,37 +39,47 @@ export default function Admin() {
       }
       setUser(session.user);
       setAccessToken(session.access_token);
-      const [assignmentsResponse, announcementsResponse, studentsResponse] =
+      const [assignmentsResponse, announcementsResponse, membershipResponse] =
         await Promise.all([
           fetch("/api/assignments"),
           fetch("/api/announcements"),
-          fetch("/api/students", {
+          fetch("/api/workspace/me", {
             headers: { Authorization: `Bearer ${session.access_token}` },
+            cache: "no-store",
           }),
         ]);
 
-      if (!assignmentsResponse.ok || !announcementsResponse.ok) {
+      if (
+        !assignmentsResponse.ok ||
+        !announcementsResponse.ok ||
+        !membershipResponse.ok
+      ) {
         throw Error("Could not load workspace data. Please try again.");
       }
 
-      const [assignmentData, announcementData] = await Promise.all([
+      const [assignmentData, announcementData, membershipData] = await Promise.all([
         assignmentsResponse.json(),
         announcementsResponse.json(),
+        membershipResponse.json(),
       ]);
       if (!Array.isArray(assignmentData) || !Array.isArray(announcementData)) {
         throw Error("Unexpected response. Please try again.");
       }
 
-      let resolvedRole = "rep";
+      const resolvedRole = membershipData.role;
       let studentData = [];
-      if (studentsResponse.ok) {
+      if (["super_admin", "admin"].includes(resolvedRole)) {
+        const studentsResponse = await fetch("/api/students", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store",
+        });
+        if (!studentsResponse.ok) {
+          throw Error("Could not load student data. Please try again.");
+        }
         studentData = await studentsResponse.json();
         if (!Array.isArray(studentData)) {
           throw Error("Unexpected response. Please try again.");
         }
-        resolvedRole = "admin";
-      } else if (![401, 403].includes(studentsResponse.status)) {
-        throw Error("Could not load workspace data. Please try again.");
       }
 
       setRole(resolvedRole);
@@ -103,10 +113,7 @@ export default function Admin() {
     try {
       const r = await fetch(`/api/${type}/${id}`, {
         method: "DELETE",
-        headers:
-          type === "students" || type === "announcements"
-            ? { Authorization: `Bearer ${accessToken}` }
-            : undefined,
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok)
@@ -196,9 +203,17 @@ export default function Admin() {
     }
     router.replace("/admin/login");
   }
+  const isAdmin = ["super_admin", "admin"].includes(role);
+  const isSuperAdmin = role === "super_admin";
+  const roleLabel =
+    role === "super_admin"
+      ? "Super administrator"
+      : role === "admin"
+        ? "Administrator"
+        : "Course representative";
   const tabs = [
     "Overview",
-    ...(role === "admin" ? ["Students"] : []),
+    ...(isAdmin ? ["Students"] : []),
     "Assignments",
     "Announcements",
   ];
@@ -232,22 +247,24 @@ export default function Admin() {
           </h1>
           <p>
             {user
-              ? `${user.email} · ${role === "admin" ? "Administrator" : "Course representative"}`
+              ? `${user.email} · ${roleLabel}`
               : "Keep your class organized, together."}
           </p>
         </div>
         {user && (
           <div className="admin-actions">
-            {role === "admin" && (
+            {isAdmin && (
               <>
                 <Link className="button secondary" href="/admin/whatsapp">
                   <Icon name="users" size={16} />
                   WhatsApp
                 </Link>
-                <Link className="button primary" href="/admin/invite">
-                  <Icon name="plus" size={16} />
-                  Invite teammate
-                </Link>
+                {isSuperAdmin && (
+                  <Link className="button primary" href="/admin/team">
+                    <Icon name="users" size={16} />
+                    Manage team
+                  </Link>
+                )}
               </>
             )}
             <button className="button secondary" onClick={signOut}>
@@ -291,8 +308,8 @@ export default function Admin() {
             <div className="stats">
               {[
                 {
-                  label: role === "admin" ? "Registered students" : "Your role",
-                  value: role === "admin" ? students.length : "Rep",
+                  label: isAdmin ? "Registered students" : "Your role",
+                  value: isAdmin ? students.length : "Rep",
                   icon: "users",
                 },
                 {
@@ -349,7 +366,7 @@ export default function Admin() {
                         text: "Post a class update to the noticeboard.",
                         icon: "bell",
                       },
-                      ...(role === "admin"
+                      ...(isAdmin
                         ? [
                             {
                               href: "/admin/test-delivery",
@@ -357,10 +374,14 @@ export default function Admin() {
                               text: "Send a private test assignment by email and WhatsApp.",
                               icon: "send",
                             },
+                          ]
+                        : []),
+                      ...(isSuperAdmin
+                        ? [
                             {
-                              href: "/admin/invite",
-                              title: "Build your class team",
-                              text: "Invite an admin or course representative.",
+                              href: "/admin/team",
+                              title: "Manage workspace access",
+                              text: "Invite teammates or revoke their roles.",
                               icon: "users",
                             },
                           ]
@@ -374,7 +395,7 @@ export default function Admin() {
                         <Icon name={a.icon} />
                       </Link>
                     ))}
-                    {role === "admin" && (
+                    {isAdmin && (
                       <button
                         type="button"
                         onClick={previewSampleReminder}
@@ -478,7 +499,7 @@ export default function Admin() {
                               </button>
                             </div>
                           ) : tab === "Announcements" ? (
-                            role === "admin" && (
+                            isAdmin && (
                               <button
                                 className="delete-button"
                                 disabled={busy !== null}
@@ -488,13 +509,15 @@ export default function Admin() {
                               </button>
                             )
                           ) : (
-                            <button
-                              className="delete-button"
-                              disabled={busy !== null}
-                              onClick={() => remove(tab.toLowerCase(), a.id)}
-                            >
-                              {busy === a.id ? "Deleting…" : "Delete"}
-                            </button>
+                            isAdmin && (
+                              <button
+                                className="delete-button"
+                                disabled={busy !== null}
+                                onClick={() => remove(tab.toLowerCase(), a.id)}
+                              >
+                                {busy === a.id ? "Deleting…" : "Delete"}
+                              </button>
+                            )
                           )}
                         </div>
                       ))

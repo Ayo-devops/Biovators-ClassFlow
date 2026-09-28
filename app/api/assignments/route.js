@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
 import { sendWhatsApp } from "../../../lib/whatsapp-server";
+import { authorizeWorkspaceMember } from "../../../lib/admin-auth";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -28,6 +29,8 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const authorization = await authorizeWorkspaceMember(request);
+  if (authorization.error) return authorization.error;
   if (!supabase)
     return Response.json(
       { error: "Class data is not configured yet." },

@@ -46,6 +46,13 @@ export async function POST(request) {
     const postedBy = body.posted_by?.trim();
     const whatsappGroupId = body.whatsapp_group_id?.trim() || "";
 
+    if (whatsappGroupId && authorization.actor === "rep") {
+      return Response.json(
+        { error: "Only administrators can send announcements to WhatsApp groups." },
+        { status: 403 },
+      );
+    }
+
     if (!title || !announcementBody || !postedBy) {
       return Response.json(
         { error: "Title, message, and posted-by name are required." },
