@@ -12,6 +12,7 @@ ClassFlow is the shared academic workspace for Biovators. It brings our assignme
 - Publishes announcements to the noticeboard and registered students by email.
 - Sends assignments and deadline reminders by email and WhatsApp.
 - Lets workspace members send confirmed messages to approved WhatsApp groups.
+- Resolves our live weekly timetable, one-off changes, and safe automated WhatsApp schedule previews.
 - Gives students a secure way to add or replace their reminder number.
 - Supports private one-student delivery tests before a class-wide message.
 - Works as an installable progressive web app with an offline fallback page.
@@ -111,6 +112,12 @@ The application expects three main tables:
 - `assignments` for course, deadline, lecturer, priority, submission, and instruction details
 - `announcements` for noticeboard messages and their authors
 
+Timetable automation adds `timetable_entries`, `timetable_changes`,
+`timetable_settings`, and `timetable_send_log`. Apply
+`supabase/migrations/202610140001_timetable.sql` to the Supabase project before
+opening the timetable administration pages. The migration seeds the official
+14 class blocks and leaves automatic delivery paused.
+
 Workspace roles are stored in trusted Supabase `app_metadata.role` values. The supported invited roles are `admin` and `rep`; addresses in `CLASSFLOW_ADMIN_EMAILS` are treated as `super_admin`.
 
 ## Useful commands
@@ -121,6 +128,7 @@ npm run build               # Create a production build
 npm start                   # Run the production build
 npm run lint                # Run ESLint
 node scripts/check-core.mjs # Check core PWA and deadline behavior
+npm run check:timetable     # Check timetable resolution and alert timing
 ```
 
 Registration behavior can be checked separately with:
@@ -153,6 +161,11 @@ The production web application deploys to Vercel from the `main` branch. Configu
 
 The WhatsApp worker remains on OCI because Chromium and `whatsapp-web.js` require a persistent process and authenticated browser session. In production, `WHATSAPP_API_URL` must point to its secure HTTPS endpoint rather than `127.0.0.1`.
 
+The OCI worker calls the protected timetable dispatcher once per minute. The
+dispatcher remains inert until an administrator selects the intended WhatsApp
+group and turns on the master automation switch. Upcoming-class alerts default
+to 10 minutes before the class and can be adjusted in the admin settings.
+
 Build locally before pushing:
 
 ```bash
@@ -171,4 +184,4 @@ npm run build
 
 ## Project status
 
-ClassFlow is live and actively used by Biovators. The web application, email delivery, WhatsApp integration, role-based workspace, and AI WhatsApp assistant are operational.
+ClassFlow is live and actively used by Biovators. The web application, email delivery, WhatsApp integration, role-based workspace, and AI WhatsApp assistant are operational. Timetable automation is included with a fail-safe paused default until its migration, target group, and test-group verification are complete.

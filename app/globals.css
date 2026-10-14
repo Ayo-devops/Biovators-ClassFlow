@@ -1161,6 +1161,143 @@ button {
   padding: 10px 12px;
   font-size: 11px;
 }
+.timetable-links {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 22px;
+}
+.form-card .timetable-links .button,
+.form-card .row-actions .button,
+.form-card .section-heading .button,
+.form-card .skip-date-control .button {
+  width: auto;
+}
+.timetable-section {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 27px;
+}
+.timetable-section:first-of-type {
+  margin-top: 0;
+}
+.timetable-section > p {
+  color: #596b53;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 21px;
+}
+.timetable-list {
+  display: grid;
+}
+.timetable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border);
+}
+.timetable-row:last-child {
+  border-bottom: 0;
+}
+.timetable-row > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.timetable-row span {
+  color: #78856f;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.timetable-row strong {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.timetable-row p {
+  color: #596b53;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.toggle-row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--green);
+}
+.toggle-row span {
+  display: grid;
+  gap: 2px;
+}
+.toggle-row strong {
+  font-size: 12px;
+}
+.toggle-row small {
+  color: #78856f;
+  font-size: 10px;
+}
+.toggle-row + .field-row {
+  margin-top: 21px;
+}
+.skip-date-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 12px;
+}
+.skip-date-control .field {
+  margin-bottom: 0;
+}
+.skip-date-control .button {
+  margin-bottom: 0;
+}
+.skip-date-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0 20px;
+}
+.skip-date-list button {
+  border: 1px solid #ccd7bf;
+  background: #f1f4ed;
+  color: #425b38;
+  padding: 7px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 10px;
+}
+.timetable-preview {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+.timetable-preview pre {
+  margin: 0;
+  padding: 15px;
+  border-radius: 8px;
+  background: #f1f4ed;
+  color: #293426;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.section-heading.compact {
+  padding: 0;
+  align-items: center;
+}
+.section-heading.compact p {
+  color: #596b53;
+  font-size: 11px;
+  margin-top: 5px;
+}
 .admin-overview {
   padding: 27px;
   display: grid;
@@ -1736,6 +1873,17 @@ button {
   }
   .admin-row {
     align-items: flex-start;
+  }
+  .timetable-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .skip-date-control {
+    grid-template-columns: 1fr;
+  }
+  .skip-date-control .button,
+  .form-card .section-heading .button {
+    width: 100%;
   }
   .announcements {
     max-height: none;

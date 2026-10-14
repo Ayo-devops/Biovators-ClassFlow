@@ -362,8 +362,20 @@ export default function Admin() {
                         text: "Post a Biovators update to our noticeboard or WhatsApp group.",
                         icon: "bell",
                       },
+                      {
+                        href: "/admin/timetable/changes",
+                        title: "Correct a timetable date",
+                        text: "Cancel, move, or add one class without changing future weeks.",
+                        icon: "calendar",
+                      },
                       ...(isAdmin
                         ? [
+                            {
+                              href: "/admin/timetable",
+                              title: "Manage our automated timetable",
+                              text: "Edit weekly classes, previews, group, and send times.",
+                              icon: "clock",
+                            },
                             {
                               href: "/admin/test-delivery",
                               title: "Test one-student delivery",
