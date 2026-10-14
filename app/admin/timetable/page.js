@@ -80,16 +80,13 @@ export default function TimetableAdminPage() {
     setLoading(true);
     setError("");
     try {
-      const [entriesResponse, settingsResponse, groupsResponse] =
-        await Promise.all([
-          authFetch("/api/timetable/entries"),
-          authFetch("/api/timetable/settings"),
-          authFetch("/api/whatsapp/groups"),
-        ]);
-      const [entryData, settingData, groupData] = await Promise.all([
+      const [entriesResponse, settingsResponse] = await Promise.all([
+        authFetch("/api/timetable/entries"),
+        authFetch("/api/timetable/settings"),
+      ]);
+      const [entryData, settingData] = await Promise.all([
         entriesResponse.json(),
         settingsResponse.json(),
-        groupsResponse.json(),
       ]);
       if ([entriesResponse, settingsResponse].some((item) => item.status === 403)) {
         router.replace("/admin");
@@ -99,15 +96,27 @@ export default function TimetableAdminPage() {
         throw new Error(entryData.error || "Could not load the timetable.");
       if (!settingsResponse.ok)
         throw new Error(settingData.error || "Could not load timetable settings.");
-      if (!groupsResponse.ok)
-        throw new Error(groupData.error || "Could not load WhatsApp groups.");
       setEntries(entryData);
       setSettings({
         ...settingData,
         evening_time: timeValue(settingData.evening_time),
         morning_time: timeValue(settingData.morning_time),
       });
-      setGroups(Array.isArray(groupData.groups) ? groupData.groups : []);
+      setLoading(false);
+
+      try {
+        const groupsResponse = await authFetch("/api/whatsapp/groups");
+        const groupData = await groupsResponse.json();
+        if (!groupsResponse.ok) {
+          throw new Error(groupData.error || "Could not load WhatsApp groups.");
+        }
+        setGroups(Array.isArray(groupData.groups) ? groupData.groups : []);
+      } catch (groupError) {
+        setGroups([]);
+        setError(
+          `The timetable is available, but WhatsApp groups are offline: ${groupError.message}`,
+        );
+      }
     } catch (loadError) {
       setError(loadError.message);
     } finally {
