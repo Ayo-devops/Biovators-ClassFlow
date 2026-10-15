@@ -2327,3 +2327,136 @@ button {
     transition: none !important;
   }
 }
+
+/* Phone-first refinements for the focused page structure */
+@media (max-width: 700px) {
+  .welcome-panel {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 24px 21px;
+    margin-bottom: 17px;
+    border-radius: 13px;
+  }
+  .welcome-panel h2 {
+    font-size: 27px;
+    max-width: 330px;
+  }
+  .welcome-panel p {
+    font-size: 12px;
+  }
+  .welcome-actions {
+    display: none;
+  }
+  .home-focus-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .home-focus-grid .panel {
+    border-radius: 11px;
+  }
+  .simple-list > a {
+    padding: 15px 0;
+  }
+  .simple-list strong {
+    font-size: 13px;
+  }
+  .latest-notice article {
+    min-height: 0;
+    padding: 0 17px 18px;
+  }
+  .latest-notice .panel-action {
+    min-height: 48px;
+  }
+  .focused-page-panel {
+    width: calc(100% + 36px);
+    margin-left: -18px;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+  .page-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding-top: 16px;
+  }
+  .page-filters select {
+    width: 100%;
+    max-width: none;
+    min-height: 46px;
+  }
+  .filter-tabs {
+    overflow-x: auto;
+    justify-content: flex-start;
+    scrollbar-width: none;
+  }
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .filter-tabs button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .noticeboard-list {
+    padding: 0 16px;
+  }
+  .noticeboard-list article {
+    gap: 11px;
+    padding: 20px 0;
+  }
+  .notice-marker {
+    width: 37px;
+    height: 37px;
+  }
+  .noticeboard-list h2 {
+    font-size: 17px;
+  }
+  .reminder-welcome {
+    align-items: flex-start;
+    padding: 19px;
+  }
+  .reminder-welcome h2 {
+    font-size: 18px;
+  }
+  .choice-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .choice-card {
+    padding: 19px 17px;
+    gap: 13px;
+  }
+  .choice-card h2 {
+    font-size: 17px;
+  }
+  .plain-note {
+    margin-top: 14px;
+  }
+  .admin-page-heading .admin-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .task-grid {
+    grid-template-columns: 1fr;
+  }
+  .task-card {
+    min-height: 82px;
+    padding: 15px;
+  }
+  .management-list,
+  .student-list {
+    padding: 0 16px;
+  }
+  .wide-search {
+    max-width: none;
+    margin: 16px;
+  }
+  .message-review .form-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .message-review .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
