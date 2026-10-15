@@ -14,6 +14,7 @@ export default function WhatsAppAdminPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -60,7 +61,7 @@ export default function WhatsAppAdminPage() {
     authenticate();
   }, [loadGroups, router]);
 
-  async function sendMessage(event) {
+  function reviewMessage(event) {
     event.preventDefault();
     setError("");
     setSuccess("");
@@ -69,8 +70,14 @@ export default function WhatsAppAdminPage() {
       setError("Choose a WhatsApp group first.");
       return;
     }
-    if (!window.confirm(`Send this message to “${group.name}”?`)) return;
+    setReviewing(true);
+  }
 
+  async function sendMessage() {
+    const group = groups.find((item) => item.id === groupId);
+    if (!group) return;
+    setError("");
+    setSuccess("");
     setSending(true);
     try {
       const response = await fetch("/api/whatsapp/groups", {
@@ -85,6 +92,7 @@ export default function WhatsAppAdminPage() {
       if (!response.ok) throw new Error(data.error || "Could not send the message.");
       setSuccess(`Message sent to ${group.name}.`);
       setMessage("");
+      setReviewing(false);
     } catch (sendError) {
       setError(sendError.message);
     } finally {
@@ -111,30 +119,25 @@ export default function WhatsAppAdminPage() {
       {loading ? (
         <p role="status">Connecting to the WhatsApp bot…</p>
       ) : groups.length ? (
-        <form onSubmit={sendMessage}>
-          <Field
-            name="whatsapp_group"
-            label="WhatsApp group"
-            options={groups.map((group) => ({ value: group.id, label: group.name }))}
-            value={groupId}
-            onChange={(event) => setGroupId(event.target.value)}
-            required
-          />
-          <Field
-            name="whatsapp_message"
-            label="Message"
-            multiline
-            required
-            maxLength={4096}
-            placeholder="Write the message our group should receive…"
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-          />
-          <button className="button primary" disabled={sending || !message.trim()}>
-            {sending ? "Sending…" : "Review and send"}
-            <Icon name="arrow" size={17} />
-          </button>
-        </form>
+        reviewing ? (
+          <div className="message-review">
+            <p className="eyebrow">FINAL CHECK</p>
+            <h3>Send this message?</h3>
+            <div className="review-destination"><Icon name="users" size={17} /><span><small>WhatsApp group</small><strong>{groups.find((item) => item.id === groupId)?.name}</strong></span></div>
+            <div className="review-message"><small>Message</small><p>{message}</p></div>
+            <p className="review-warning">Once confirmed, this message will immediately be sent to the selected group.</p>
+            <div className="form-actions">
+              <button type="button" className="button secondary" disabled={sending} onClick={() => setReviewing(false)}>Go back and edit</button>
+              <button type="button" className="button primary" disabled={sending} onClick={sendMessage}>{sending ? "Sending…" : "Confirm and send"}<Icon name="send" size={16} /></button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={reviewMessage}>
+            <Field name="whatsapp_group" label="WhatsApp group" options={groups.map((group) => ({ value: group.id, label: group.name }))} value={groupId} onChange={(event) => setGroupId(event.target.value)} required />
+            <Field name="whatsapp_message" label="Message" multiline required maxLength={4096} placeholder="Write the message our group should receive…" value={message} onChange={(event) => setMessage(event.target.value)} />
+            <button className="button primary" disabled={!message.trim()}>Review message<Icon name="arrow" size={17} /></button>
+          </form>
+        )
       ) : (
         <div className="notice">
           Our bot is connected, but it is not currently a member of any WhatsApp groups.

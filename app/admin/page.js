@@ -1,558 +1,73 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
 import Icon from "../../components/icon";
-import { formatDate } from "../../lib/deadlines";
-export default function Admin() {
-  const router = useRouter();
-  const [user, setUser] = useState(null),
-    [role, setRole] = useState(null),
-    [accessToken, setAccessToken] = useState(""),
-    [assignments, setAssignments] = useState([]),
-    [students, setStudents] = useState([]),
-    [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [tab, setTab] = useState("Overview"),
-    [query, setQuery] = useState(""),
-    [busy, setBusy] = useState(null),
-    [reminderNotice, setReminderNotice] = useState(""),
-    [samplePreview, setSamplePreview] = useState(null);
-  const load = useCallback(async () => {
-    try {
-      if (!supabase) {
-        await Promise.resolve();
-        throw Error(
-          "Sign-in is not configured yet. Please contact your class administrator.",
-        );
-      }
-      const {
-        data: { session },
-        error: authError,
-      } = await supabase.auth.getSession();
-      if (authError) throw authError;
-      if (!session) {
-        router.replace("/admin/login");
-        return;
-      }
-      setUser(session.user);
-      setAccessToken(session.access_token);
-      const [assignmentsResponse, announcementsResponse, membershipResponse] =
-        await Promise.all([
-          fetch("/api/assignments"),
-          fetch("/api/announcements"),
-          fetch("/api/workspace/me", {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-            cache: "no-store",
-          }),
-        ]);
+import WorkspaceHeading from "../../components/workspace-heading";
+import { useWorkspaceSession } from "../../lib/use-workspace-session";
 
-      if (
-        !assignmentsResponse.ok ||
-        !announcementsResponse.ok ||
-        !membershipResponse.ok
-      ) {
-        throw Error("Could not load workspace data. Please try again.");
-      }
+export default function AdminHomePage() {
+  const workspace = useWorkspaceSession();
+  const [counts, setCounts] = useState({ assignments: 0, announcements: 0, students: 0 });
+  const [dataLoading, setDataLoading] = useState(true);
 
-      const [assignmentData, announcementData, membershipData] = await Promise.all([
-        assignmentsResponse.json(),
-        announcementsResponse.json(),
-        membershipResponse.json(),
-      ]);
-      if (!Array.isArray(assignmentData) || !Array.isArray(announcementData)) {
-        throw Error("Unexpected response. Please try again.");
-      }
-
-      const resolvedRole = membershipData.role;
-      let studentData = [];
-      if (["super_admin", "admin"].includes(resolvedRole)) {
-        const studentsResponse = await fetch("/api/students", {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-          cache: "no-store",
-        });
-        if (!studentsResponse.ok) {
-          throw Error("Could not load student data. Please try again.");
-        }
-        studentData = await studentsResponse.json();
-        if (!Array.isArray(studentData)) {
-          throw Error("Unexpected response. Please try again.");
-        }
-      }
-
-      setRole(resolvedRole);
-      setAssignments(assignmentData);
-      setAnnouncements(announcementData);
-      setStudents(studentData);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+  const loadCounts = useCallback(async () => {
+    if (!workspace.accessToken) return;
+    setDataLoading(true);
+    const requests = [fetch("/api/assignments"), fetch("/api/announcements")];
+    if (workspace.isAdmin) {
+      requests.push(fetch("/api/students", { headers: { Authorization: `Bearer ${workspace.accessToken}` }, cache: "no-store" }));
     }
-  }, [router]);
+    const results = await Promise.allSettled(requests.map(async (request) => {
+      const response = await request;
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      return Array.isArray(data) ? data.length : 0;
+    }));
+    setCounts({ assignments: results[0]?.value || 0, announcements: results[1]?.value || 0, students: results[2]?.value || 0 });
+    setDataLoading(false);
+  }, [workspace.accessToken, workspace.isAdmin]);
+
   useEffect(() => {
-    // Synchronize the workspace with the external auth session and API on mount.
+    // Load workspace counts after the authenticated session is ready.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-  }, [load]);
-  async function remove(type, id) {
-    if (
-      !window.confirm(
-        type === "students"
-          ? "Remove this student from the reminder list?"
-          : type === "announcements"
-            ? "Delete this announcement from the noticeboard? This cannot be undone."
-            : "Delete this assignment?",
-      )
-    )
-      return;
-    setBusy(id);
-    setError("");
-    try {
-      const r = await fetch(`/api/${type}/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok)
-        throw Error(
-          data.error || "Could not remove this item. Please try again.",
-        );
-      if (type === "students") setStudents((s) => s.filter((i) => i.id !== id));
-      else if (type === "announcements")
-        setAnnouncements((items) => items.filter((item) => item.id !== id));
-      else setAssignments((a) => a.filter((i) => i.id !== id));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(null);
-    }
-  }
-  async function remindStudent(student, send = false) {
-    if (
-      send &&
-      !window.confirm(
-        `Send current deadline reminders only to ${student.student_name}?`,
-      )
-    )
-      return;
+    loadCounts();
+  }, [loadCounts]);
 
-    const action = send ? "send" : "preview";
-    setBusy(`${student.id}:${action}`);
-    setError("");
-    setReminderNotice("");
-    try {
-      const url = `/api/send-reminders${
-        send ? "" : `?studentId=${encodeURIComponent(student.id)}`
-      }`;
-      const response = await fetch(url, {
-        method: send ? "POST" : "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          ...(send ? { "Content-Type": "application/json" } : {}),
-        },
-        body: send ? JSON.stringify({ studentId: student.id }) : undefined,
-      });
-      const data = await response.json();
-      if (!response.ok) throw Error(data.error || "Reminder request failed.");
-
-      if (send) {
-        setReminderNotice(
-          `Finished for ${student.student_name}: ${data.results.emails} email and ${data.results.whatsapp} WhatsApp reminder(s) sent${
-            data.results.failures.length
-              ? `; ${data.results.failures.length} failed.`
-              : "."
-          }`,
-        );
-      } else {
-        setReminderNotice(
-          `${student.student_name} would receive ${data.deliveries} reminder(s) across ${data.assignments} assignment(s). Nothing was sent.`,
-        );
-      }
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(null);
-    }
-  }
-  async function previewSampleReminder() {
-    setBusy("sample-preview");
-    setError("");
-    setReminderNotice("");
-    try {
-      const response = await fetch("/api/send-reminders?sample=true", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      });
-      const data = await response.json();
-      if (!response.ok) throw Error(data.error || "Preview request failed.");
-      setSamplePreview(data);
-    } catch (previewError) {
-      setError(previewError.message);
-    } finally {
-      setBusy(null);
-    }
-  }
-  async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    router.replace("/admin/login");
-  }
-  const isAdmin = ["super_admin", "admin"].includes(role);
-  const isSuperAdmin = role === "super_admin";
-  const roleLabel =
-    role === "super_admin"
-      ? "Super administrator"
-      : role === "admin"
-        ? "Administrator"
-        : "Course representative";
-  const tabs = [
-    "Overview",
-    ...(isAdmin ? ["Students"] : []),
-    "Assignments",
-    "Announcements",
+  const primaryActions = [
+    { href: "/submit", title: "Add an assignment", text: "Share a new task and deadline with Biovators.", icon: "book" },
+    { href: "/announce", title: "Post an announcement", text: "Publish an update to the noticeboard or WhatsApp.", icon: "bell" },
+    { href: "/admin/whatsapp", title: "Message a WhatsApp group", text: "Write, preview and confirm a group message.", icon: "send" },
+    { href: "/admin/timetable/changes", title: "Update one class", text: "Move, cancel or add a class without changing the weekly timetable.", icon: "calendar" },
   ];
-  const rows = (
-    tab === "Students"
-      ? students
-      : tab === "Assignments"
-        ? assignments
-        : announcements
-  ).filter((a) =>
-    [
-      a.student_name,
-      a.student_email,
-      a.assignment_title,
-      a.course_title,
-      a.title,
-      a.body,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-      .includes(query.toLowerCase()),
-  );
-  return (
-    <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">BEHIND OUR CONNECTED COLLECTIVE</p>
-          <h1>
-            Our admin workspace<span>.</span>
-          </h1>
-          <p>
-            {user
-              ? `${user.email} · ${roleLabel}`
-              : "Keeping Biovators organized, together."}
-          </p>
-        </div>
-        {user && (
-          <div className="admin-actions">
-            <Link className="button secondary" href="/admin/whatsapp">
-              <Icon name="users" size={16} />
-              WhatsApp
-            </Link>
-            {isSuperAdmin && (
-              <Link className="button primary" href="/admin/team">
-                <Icon name="users" size={16} />
-                Manage team
-              </Link>
-            )}
-            <button className="button secondary" onClick={signOut}>
-              Sign out
-            </button>
-          </div>
-        )}
-      </div>
-      {error && (
-        <div className="notice error" role="alert">
-          {error}
-          <button
-            className="text-button"
-            onClick={() => {
-              setLoading(true);
-              setError("");
-              load();
-            }}
-          >
-            Try again
-          </button>
-        </div>
-      )}
-      {reminderNotice && (
-        <div className="notice success" role="status">
-          {reminderNotice}
-        </div>
-      )}
-      {loading ? (
-        <div
-          role="status"
-          aria-label="Loading workspace"
-          className="skeleton-list"
-        >
-          <div className="skeleton" />
-          <div className="skeleton" />
-        </div>
-      ) : (
-        user && (
-          <>
-            <div className="stats">
-              {[
-                {
-                  label: isAdmin ? "Registered students" : "Your role",
-                  value: isAdmin ? students.length : "Rep",
-                  icon: "users",
-                },
-                {
-                  label: "Class assignments",
-                  value: assignments.length,
-                  icon: "book",
-                },
-                {
-                  label: "Announcements",
-                  value: announcements.length,
-                  icon: "bell",
-                },
-              ].map((s) => (
-                <div className="stat-card" key={s.label}>
-                  <div>
-                    <span className="stat-icon">
-                      <Icon name={s.icon} />
-                    </span>
-                    <span className="stat-value">{s.value}</span>
-                  </div>
-                  <h3>{s.label}</h3>
-                </div>
-              ))}
-            </div>
-            <section className="panel">
-              <div className="filter-tabs">
-                {tabs.map((t) => (
-                  <button
-                    key={t}
-                    className={tab === t ? "selected" : ""}
-                    aria-pressed={tab === t}
-                    onClick={() => {
-                      setTab(t);
-                      setQuery("");
-                    }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              {tab === "Overview" ? (
-                <>
-                  <div className="admin-overview">
-                    {[
-                      {
-                        href: "/submit",
-                        title: "Give Biovators a head start",
-                        text: "Add our next assignment and its deadline.",
-                        icon: "book",
-                      },
-                      {
-                        href: "/announce",
-                        title: "Keep all of us in the loop",
-                        text: "Post a Biovators update to our noticeboard or WhatsApp group.",
-                        icon: "bell",
-                      },
-                      {
-                        href: "/admin/timetable/changes",
-                        title: "Correct a timetable date",
-                        text: "Cancel, move, or add one class without changing future weeks.",
-                        icon: "calendar",
-                      },
-                      ...(isAdmin
-                        ? [
-                            {
-                              href: "/admin/timetable",
-                              title: "Manage our automated timetable",
-                              text: "Edit weekly classes, previews, group, and send times.",
-                              icon: "clock",
-                            },
-                            {
-                              href: "/admin/test-delivery",
-                              title: "Test one-student delivery",
-                              text: "Send a private test assignment by email and WhatsApp.",
-                              icon: "send",
-                            },
-                          ]
-                        : []),
-                      ...(isSuperAdmin
-                        ? [
-                            {
-                              href: "/admin/team",
-                              title: "Manage workspace access",
-                              text: "Invite teammates or revoke their roles.",
-                              icon: "users",
-                            },
-                          ]
-                        : []),
-                    ].map((a) => (
-                      <Link key={a.href} href={a.href}>
-                        <div>
-                          <h3>{a.title}</h3>
-                          <p>{a.text}</p>
-                        </div>
-                        <Icon name={a.icon} />
-                      </Link>
-                    ))}
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={previewSampleReminder}
-                        disabled={busy !== null}
-                      >
-                        <div>
-                          <h3>Preview a test reminder</h3>
-                          <p>No assignment is created and nothing is sent.</p>
-                        </div>
-                        <Icon name="eye" />
-                      </button>
-                    )}
-                  </div>
-                  {samplePreview && (
-                    <div className="reminder-preview" role="status">
-                      <div className="section-heading">
-                        <div>
-                          <p className="eyebrow">SAFE PREVIEW</p>
-                          <h2>Sample reminder</h2>
-                        </div>
-                        <button
-                          className="text-button"
-                          onClick={() => setSamplePreview(null)}
-                        >
-                          Close
-                        </button>
-                      </div>
-                      <p>
-                        This uses sample data only. No database record was
-                        created and no email or WhatsApp message was sent.
-                      </p>
-                      <h3>Email subject</h3>
-                      <pre>{samplePreview.email.subject}</pre>
-                      <h3>WhatsApp message</h3>
-                      <pre>{samplePreview.whatsapp}</pre>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="section-heading">
-                    <h2>{tab}</h2>
-                    <span className="count">{rows.length}</span>
-                  </div>
-                  <div className="filters">
-                    <label className="search">
-                      <Icon name="search" />
-                      <input
-                        aria-label={`Search ${tab.toLowerCase()}`}
-                        placeholder={`Search ${tab.toLowerCase()}…`}
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                      />
-                    </label>
-                  </div>
-                  <div className="admin-list">
-                    {rows.length ? (
-                      rows.map((a) => (
-                        <div className="admin-row" key={a.id}>
-                          <div>
-                            <h3>
-                              {a.student_name || a.assignment_title || a.title}
-                            </h3>
-                            <p>
-                              {tab === "Students"
-                                ? a.student_email
-                                : tab === "Assignments"
-                                  ? `${a.course_title} · Due ${formatDate(a.deadline_date)}`
-                                  : a.body}
-                            </p>
-                            {tab === "Announcements" && (
-                              <p>Posted by {a.posted_by}</p>
-                            )}
-                          </div>
-                          {tab === "Students" ? (
-                            <div className="row-actions">
-                              <button
-                                className="button secondary"
-                                disabled={busy !== null}
-                                onClick={() => remindStudent(a)}
-                              >
-                                {busy === `${a.id}:preview`
-                                  ? "Checking…"
-                                  : "Preview"}
-                              </button>
-                              <button
-                                className="button primary"
-                                disabled={busy !== null}
-                                onClick={() => remindStudent(a, true)}
-                              >
-                                {busy === `${a.id}:send`
-                                  ? "Sending…"
-                                  : "Send reminder"}
-                              </button>
-                              <button
-                                className="delete-button"
-                                disabled={busy !== null}
-                                onClick={() => remove("students", a.id)}
-                              >
-                                {busy === a.id ? "Removing…" : "Remove"}
-                              </button>
-                            </div>
-                          ) : tab === "Announcements" ? (
-                            isAdmin && (
-                              <button
-                                className="delete-button"
-                                disabled={busy !== null}
-                                onClick={() => remove("announcements", a.id)}
-                              >
-                                {busy === a.id ? "Deleting…" : "Delete"}
-                              </button>
-                            )
-                          ) : (
-                            isAdmin && (
-                              <button
-                                className="delete-button"
-                                disabled={busy !== null}
-                                onClick={() => remove(tab.toLowerCase(), a.id)}
-                              >
-                                {busy === a.id ? "Deleting…" : "Delete"}
-                              </button>
-                            )
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="empty-state">
-                        <span className="empty-icon">
-                          <Icon name="search" />
-                        </span>
-                        <h3>
-                          {query
-                            ? "No matches found"
-                            : `No ${tab.toLowerCase()} yet`}
-                        </h3>
-                        <p>
-                          {query
-                            ? "Try a different search."
-                            : "New items will appear here."}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </section>
-          </>
-        )
-      )}
-    </>
-  );
+  const managementActions = [
+    ...(workspace.isAdmin ? [
+      { href: "/admin/students", title: "Students and reminders", text: "View registrations and safely test one-student delivery.", icon: "users" },
+      { href: "/admin/timetable", title: "Automated timetable", text: "Manage weekly classes, timing and delivery settings.", icon: "clock" },
+      { href: "/admin/test-delivery", title: "Test a delivery", text: "Send an assignment to one selected student only.", icon: "send" },
+    ] : []),
+    ...(workspace.isSuperAdmin ? [{ href: "/admin/team", title: "Team access", text: "Invite teammates, change roles or revoke access.", icon: "shield" }] : []),
+  ];
+
+  return <>
+    <WorkspaceHeading eyebrow="BIOVATORS ADMIN" title="What do you need to do?" description="Choose one task. ClassFlow will guide you through the rest." user={workspace.user} role={workspace.role} onSignOut={workspace.signOut} />
+    {workspace.error && <div className="notice error" role="alert">{workspace.error}<button className="text-button" onClick={workspace.retry}>Try again</button></div>}
+    {workspace.loading ? <div className="skeleton-list"><div className="skeleton" /><div className="skeleton" /></div> : workspace.user && <>
+      <section className="stats compact-stats" aria-label="Workspace summary">
+        <Link href="/admin/assignments" className="stat-card"><div><span className="stat-icon green"><Icon name="book" /></span><span className="stat-value">{dataLoading ? "—" : counts.assignments}</span></div><h3>Assignments</h3><p>View and manage our tasks.</p></Link>
+        <Link href="/admin/announcements" className="stat-card"><div><span className="stat-icon purple"><Icon name="bell" /></span><span className="stat-value">{dataLoading ? "—" : counts.announcements}</span></div><h3>Announcements</h3><p>Review our published notices.</p></Link>
+        {workspace.isAdmin && <Link href="/admin/students" className="stat-card"><div><span className="stat-icon orange"><Icon name="users" /></span><span className="stat-value">{dataLoading ? "—" : counts.students}</span></div><h3>Registered students</h3><p>Manage reminder recipients.</p></Link>}
+      </section>
+
+      <section className="workspace-section">
+        <div className="section-heading"><div><p className="eyebrow">EVERYDAY ACTIONS</p><h2>Start a task</h2></div></div>
+        <div className="task-grid">{primaryActions.map((action) => <Link href={action.href} key={action.href} className="task-card"><span className="task-icon"><Icon name={action.icon} /></span><div><h3>{action.title}</h3><p>{action.text}</p></div><Icon name="arrow" size={17} /></Link>)}</div>
+      </section>
+
+      {managementActions.length > 0 && <section className="workspace-section secondary-tools">
+        <div className="section-heading"><div><p className="eyebrow">SETTINGS AND ACCESS</p><h2>Manage ClassFlow</h2></div></div>
+        <div className="task-grid">{managementActions.map((action) => <Link href={action.href} key={action.href} className="task-card"><span className="task-icon muted"><Icon name={action.icon} /></span><div><h3>{action.title}</h3><p>{action.text}</p></div><Icon name="arrow" size={17} /></Link>)}</div>
+      </section>}
+    </>}
+  </>;
 }
