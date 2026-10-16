@@ -43,7 +43,10 @@ function occurrences(text, term) {
 }
 
 export async function GET(request) {
-  const authorization = await authorizeAdmin(request, { allowReminderKey: true });
+  const authorization = await authorizeAdmin(request, {
+    allowReminderKey: true,
+    allowWorkerKey: true,
+  });
   if (authorization.error) return authorization.error;
   if (!filesSupabase) {
     return Response.json({ error: "Material search is not configured." }, { status: 503 });
