@@ -36,6 +36,7 @@ export default function AdminHomePage() {
 
   const primaryActions = [
     { href: "/submit", title: "Add an assignment", text: "Share a new task and deadline with Biovators.", icon: "book" },
+    { href: "/admin/materials", title: "Upload study material", text: "Add notes, slides or course files for students.", icon: "download" },
     { href: "/announce", title: "Post an announcement", text: "Publish an update to the noticeboard or WhatsApp.", icon: "bell" },
     { href: "/admin/whatsapp", title: "Message a WhatsApp group", text: "Write, preview and confirm a group message.", icon: "send" },
     { href: "/admin/timetable/changes", title: "Update one class", text: "Move, cancel or add a class without changing the weekly timetable.", icon: "calendar" },

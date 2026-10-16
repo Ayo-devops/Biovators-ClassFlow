@@ -10,12 +10,14 @@ export default function Shell({ children }) {
     ? [
         { href: "/admin", label: "Admin home", icon: "grid", exact: true },
         { href: "/admin/assignments", label: "Assignments", icon: "book" },
+        { href: "/admin/materials", label: "Materials", icon: "download" },
         { href: "/admin/announcements", label: "Announcements", icon: "bell" },
         { href: "/admin/whatsapp", label: "WhatsApp", icon: "send" },
       ]
     : [
         { href: "/", label: "Home", icon: "grid", exact: true },
         { href: "/assignments", label: "Assignments", icon: "book" },
+        { href: "/materials", label: "Materials", icon: "download" },
         { href: "/announcements", label: "Noticeboard", icon: "bell" },
         { href: "/reminders", label: "Reminders", icon: "clock" },
       ];

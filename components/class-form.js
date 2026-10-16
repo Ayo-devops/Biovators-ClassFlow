@@ -4,6 +4,7 @@ import Link from "next/link";
 import FormPage, { Field } from "./form-page";
 import Icon from "./icon";
 import { supabase } from "../lib/supabase";
+import { uploadClassFile } from "../lib/upload-class-file";
 const configs = {
   register: {
     title: "A little reminder. A lot less worry.",
@@ -100,6 +101,8 @@ export default function ClassForm({ kind }) {
     [authChecking, setAuthChecking] = useState(kind !== "register"),
     [groups, setGroups] = useState([]),
     [whatsappGroupId, setWhatsappGroupId] = useState("");
+  const [assignmentFiles, setAssignmentFiles] = useState([]);
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   useEffect(() => {
     if (kind === "register") return;
@@ -214,6 +217,29 @@ export default function ClassForm({ kind }) {
           );
         }
       }
+      if (kind === "submit" && assignmentFiles.length) {
+        const uploadResults = await Promise.allSettled(
+          assignmentFiles.map((file) =>
+            uploadClassFile({
+              file,
+              accessToken,
+              kind: "assignment",
+              assignmentId: data.id,
+            }),
+          ),
+        );
+        const failed = uploadResults.filter((item) => item.status === "rejected");
+        if (failed.length) {
+          setResultWarning(true);
+          setResultNotice(
+            `The assignment was added, but ${failed.length} file${failed.length === 1 ? "" : "s"} could not be uploaded: ${failed[0].reason.message}`,
+          );
+        } else {
+          setResultNotice(
+            `${assignmentFiles.length} file${assignmentFiles.length === 1 ? " was" : "s were"} attached to the assignment.`,
+          );
+        }
+      }
       setSuccess(true);
     } catch (err) {
       setError(
@@ -255,6 +281,8 @@ export default function ClassForm({ kind }) {
               onClick={() => {
                 setForm(initial);
                 setWhatsappGroupId("");
+                setAssignmentFiles([]);
+                setFileInputKey((current) => current + 1);
                 setResultNotice("");
                 setResultWarning(false);
                 setSuccess(false);
@@ -315,6 +343,20 @@ export default function ClassForm({ kind }) {
                 value={whatsappGroupId}
                 onChange={(event) => setWhatsappGroupId(event.target.value)}
               />
+            )}
+            {kind === "submit" && (
+              <div className="field">
+                <label htmlFor="assignment_files">Files (optional)</label>
+                <input
+                  key={fileInputKey}
+                  id="assignment_files"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png"
+                  onChange={(event) => setAssignmentFiles([...event.target.files].slice(0, 5))}
+                />
+                <span className="field-help">Add up to 5 files. Each file can be up to 20 MB.</span>
+              </div>
             )}
             <button className="button primary" disabled={loading} type="submit">
               {loading ? "Saving…" : c.button}

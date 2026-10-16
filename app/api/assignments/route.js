@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
 import { sendWhatsApp } from "../../../lib/whatsapp-server";
 import { authorizeWorkspaceMember } from "../../../lib/admin-auth";
+import { filesSupabase, signedFiles } from "../../../lib/class-files-server";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -25,7 +26,18 @@ export async function GET() {
     .order("deadline_date", { ascending: true });
 
   if (error) return Response.json({ error }, { status: 500 });
-  return Response.json(data);
+  if (!data.length || !filesSupabase) return Response.json(data);
+  const { data: files, error: filesError } = await filesSupabase
+    .from("assignment_files")
+    .select("id, assignment_id, file_name, storage_path, mime_type, file_size, created_at")
+    .in("assignment_id", data.map((item) => item.id))
+    .order("created_at");
+  if (filesError) return Response.json(data);
+  const downloadableFiles = await signedFiles(files);
+  return Response.json(data.map((assignment) => ({
+    ...assignment,
+    files: downloadableFiles.filter((file) => String(file.assignment_id) === String(assignment.id)),
+  })));
 }
 
 export async function POST(request) {

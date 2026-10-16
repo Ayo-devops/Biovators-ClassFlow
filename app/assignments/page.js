@@ -64,7 +64,7 @@ export default function AssignmentsPage() {
               const status = deadlineStatus(item.deadline_date);
               return <details className="assignment" id={`assignment-${item.id}`} key={item.id}>
                 <summary><span className="course-icon"><Icon name="book" /></span><span className="assignment-title"><span className="course-name">{item.course_title}</span><strong>{item.assignment_title}</strong><span className="assignment-meta"><Icon name="calendar" size={13} />{formatDate(item.deadline_date)}<span>·</span>{item.submission_method}</span></span><span className={`badge ${status.tone}`}>{status.label}</span><span className="expand-mark">+</span></summary>
-                <div className="assignment-details"><p>{item.description || "No additional instructions were added."}</p><div><span><b>Lecturer</b> {item.lecturer_name || "Not specified"}</span><span><b>Priority</b> {item.priority || "Medium"}</span><span><b>Submit via</b> {item.submission_method}</span></div></div>
+                <div className="assignment-details"><p>{item.description || "No additional instructions were added."}</p><div><span><b>Lecturer</b> {item.lecturer_name || "Not specified"}</span><span><b>Priority</b> {item.priority || "Medium"}</span><span><b>Submit via</b> {item.submission_method}</span></div>{item.files?.length > 0 && <div className="assignment-files"><b>Attached files</b>{item.files.map((file) => <a key={file.id} href={file.download_url} target="_blank" rel="noreferrer"><Icon name="download" size={15} />{file.file_name}</a>)}</div>}</div>
               </details>;
             })}
           </div>
