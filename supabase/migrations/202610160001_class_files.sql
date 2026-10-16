@@ -26,7 +26,7 @@ on conflict (id) do update set
 
 create table if not exists public.assignment_files (
   id uuid primary key default gen_random_uuid(),
-  assignment_id bigint not null references public.assignments(id) on delete cascade,
+  assignment_id uuid not null references public.assignments(id) on delete cascade,
   file_name text not null,
   storage_path text not null unique,
   mime_type text not null,
