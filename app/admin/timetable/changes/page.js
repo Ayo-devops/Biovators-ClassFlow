@@ -224,15 +224,15 @@ export default function TimetableChangesPage() {
     >
       <div className="timetable-links">
         <a className="button secondary" href="/admin/timetable">
-          Base timetable and settings <Icon name="arrow" size={16} />
+          Weekly schedule and reminders <Icon name="arrow" size={16} />
         </a>
       </div>
       {error && <div className="notice error" role="alert">{error}</div>}
       {notice && <div className="notice success" role="status">{notice}</div>}
 
       <section className="timetable-section">
-        <h2>Add a one-off change</h2>
-        <p>Changes apply only to the selected calendar date.</p>
+        <h2>Change one day’s schedule</h2>
+        <p>This change will apply only to the date you choose.</p>
         <form onSubmit={save}>
           <div className="field-row">
             <Field
@@ -300,7 +300,7 @@ export default function TimetableChangesPage() {
 
           <Field name="note" label="Note (optional)" multiline value={form.note} onChange={update} placeholder="Why did this change?" />
           <button className="button primary" disabled={busy === "save" || loading}>
-            {busy === "save" ? "Saving…" : "Save one-off change"}
+            {busy === "save" ? "Saving…" : "Save this change"}
           </button>
         </form>
       </section>
@@ -326,7 +326,7 @@ export default function TimetableChangesPage() {
       </section>
 
       <section className="timetable-section">
-        <h2>Recent one-off changes</h2>
+        <h2>Recent date changes</h2>
         {loading ? (
           <p role="status">Loading changes…</p>
         ) : changes.length ? (
@@ -354,7 +354,7 @@ export default function TimetableChangesPage() {
             })}
           </div>
         ) : (
-          <div className="notice">No one-off timetable changes yet.</div>
+          <div className="notice">No date changes have been added yet.</div>
         )}
       </section>
     </FormPage>

@@ -70,6 +70,19 @@ export default function HomePage() {
         </div>
       )}
 
+      {!loading && latestNotice && (
+        <Link className="announcement-ticker" href="/announcements" aria-label={`Latest announcement: ${latestNotice.title}`}>
+          <span className="announcement-ticker-label"><Icon name="bell" size={15} />Latest</span>
+          <span className="announcement-ticker-window">
+            <span className="announcement-ticker-text">
+              <strong>{latestNotice.title}</strong>
+              <span>{latestNotice.body.length > 150 ? `${latestNotice.body.slice(0, 147)}…` : latestNotice.body}</span>
+            </span>
+          </span>
+          <Icon name="arrow" size={16} />
+        </Link>
+      )}
+
       <section className="welcome-panel">
         <div>
           <span className="hero-tag"><span />OUR CLASS COMPANION</span>

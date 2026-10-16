@@ -1327,6 +1327,10 @@ button {
   gap: 45px;
   align-items: start;
 }
+.form-layout-wide {
+  max-width: 1320px;
+  grid-template-columns: minmax(220px, 0.65fr) minmax(0, 2.35fr);
+}
 .form-intro {
   padding-top: 30px;
 }
@@ -1608,6 +1612,113 @@ button {
   font-size: 12px;
   line-height: 1.7;
   margin-bottom: 21px;
+}
+.timetable-edit-form {
+  margin: 18px 0 24px;
+  padding: 22px;
+  border: 1px solid #dfe7d5;
+  border-radius: 12px;
+  background: #f8faf5;
+}
+.timetable-edit-form > h3 {
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+.timetable-day-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.timetable-day-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fbfcf8;
+}
+.timetable-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--border);
+}
+.timetable-day-heading h3 {
+  font-size: 14px;
+}
+.timetable-day-heading span {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #e8eedf;
+  color: #416245;
+  font-size: 10px;
+  font-weight: 700;
+}
+.timetable-class {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.timetable-class:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.timetable-class strong,
+.timetable-class p,
+.timetable-class small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.timetable-class strong { font-size: 12px; }
+.timetable-class p { margin: 4px 0; color: #42573f; font-size: 10px; line-height: 1.45; }
+.timetable-class small { color: #74816e; font-size: 9px; line-height: 1.5; }
+.timetable-class .row-actions { justify-content: flex-start; margin-top: 10px; }
+.timetable-day-empty { padding-top: 14px; color: #829079; font-size: 10px; }
+.announcement-ticker {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  min-height: 48px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid #dfe7d5;
+  border-radius: 11px;
+  background: #fff;
+  color: #264d3c;
+}
+.announcement-ticker-label {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  background: #173f32;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.announcement-ticker-window { overflow: hidden; white-space: nowrap; }
+.announcement-ticker-text {
+  display: inline-flex;
+  gap: 20px;
+  min-width: max-content;
+  font-size: 11px;
+  animation: announcement-scroll 24s linear infinite;
+}
+.announcement-ticker:hover .announcement-ticker-text,
+.announcement-ticker:focus .announcement-ticker-text { animation-play-state: paused; }
+.announcement-ticker-text span { color: #64745d; }
+.announcement-ticker > svg { margin-right: 15px; }
+@keyframes announcement-scroll {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
 }
 .timetable-list {
   display: grid;
@@ -1897,6 +2008,9 @@ button {
   .form-layout {
     grid-template-columns: 1fr;
     max-width: 580px;
+  }
+  .form-layout-wide {
+    max-width: 760px;
   }
   .form-intro {
     padding-top: 0;
@@ -2301,6 +2415,10 @@ button {
     align-items: flex-start;
     flex-direction: column;
   }
+  .timetable-day-grid { grid-template-columns: 1fr; }
+  .timetable-edit-form { padding: 18px 15px; }
+  .announcement-ticker { gap: 9px; }
+  .announcement-ticker-label { padding: 0 11px; }
   .skip-date-control {
     grid-template-columns: 1fr;
   }

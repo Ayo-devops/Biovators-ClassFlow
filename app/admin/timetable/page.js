@@ -30,6 +30,8 @@ export default function TimetableAdminPage() {
   const [settings, setSettings] = useState(null);
   const [entry, setEntry] = useState(emptyEntry);
   const [editingId, setEditingId] = useState("");
+  const [showClassForm, setShowClassForm] = useState(false);
+  const [showSettingsForm, setShowSettingsForm] = useState(false);
   const [previewDate, setPreviewDate] = useState("");
   const [previewKind, setPreviewKind] = useState("morning");
   const [preview, setPreview] = useState(null);
@@ -163,6 +165,7 @@ export default function TimetableAdminPage() {
       setNotice(editingId ? "Timetable class updated." : "Timetable class added.");
       setEntry(emptyEntry);
       setEditingId("");
+      setShowClassForm(false);
       await load();
     } catch (saveError) {
       setError(saveError.message);
@@ -179,11 +182,12 @@ export default function TimetableAdminPage() {
       end_time: timeValue(item.end_time),
       lecturer: item.lecturer || "",
     });
+    setShowClassForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function deleteEntry(item) {
-    if (!window.confirm(`Delete ${item.course_code} from the base timetable?`))
+    if (!window.confirm(`Delete ${item.course_code} from the weekly schedule?`))
       return;
     setBusy(`delete:${item.id}`);
     try {
@@ -237,6 +241,7 @@ export default function TimetableAdminPage() {
           ? "Automation settings saved and enabled."
           : "Settings saved. Automatic sends remain paused.",
       );
+      setShowSettingsForm(false);
     } catch (saveError) {
       setError(saveError.message);
     } finally {
@@ -267,7 +272,7 @@ export default function TimetableAdminPage() {
 
   if (loading || !settings) {
     return (
-      <FormPage title="Our automated timetable." description="Loading the Biovators schedule…" icon="calendar" back="/admin">
+      <FormPage title="Our class schedule." description="Loading the Biovators schedule…" icon="calendar" back="/admin" wide>
         <p role="status">Loading timetable controls…</p>
         {error && <div className="notice error">{error}</div>}
       </FormPage>
@@ -276,23 +281,40 @@ export default function TimetableAdminPage() {
 
   return (
     <FormPage
-      title="Our automated timetable."
-      description="Manage the permanent class schedule, safe previews, and exactly when ClassFlow should keep Biovators informed."
+      title="Our class schedule."
+      description="Keep our weekly classes accurate and choose when ClassFlow should remind Biovators."
       icon="calendar"
       back="/admin"
+      wide
     >
       <div className="timetable-links">
         <a className="button secondary" href="/admin/timetable/changes">
-          Manage one-off changes <Icon name="arrow" size={16} />
+          Change a specific date <Icon name="arrow" size={16} />
         </a>
       </div>
       {error && <div className="notice error" role="alert">{error}</div>}
       {notice && <div className="notice success" role="status">{notice}</div>}
 
       <section className="timetable-section">
-        <h2>{editingId ? "Edit base class" : "Add a base class"}</h2>
-        <p>Permanent weekly changes belong here. One-off changes use the changes page.</p>
-        <form onSubmit={saveEntry}>
+        <div className="section-heading compact">
+          <div>
+            <h2>Weekly class schedule</h2>
+            <p>These classes repeat every week.</p>
+          </div>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => {
+              setEditingId("");
+              setEntry(emptyEntry);
+              setShowClassForm((current) => !current);
+            }}
+          >
+            {showClassForm && !editingId ? "Close form" : "Add a class"}
+          </button>
+        </div>
+        {showClassForm && <form className="timetable-edit-form" onSubmit={saveEntry}>
+          <h3>{editingId ? `Edit ${entry.course_code}` : "Add a class"}</h3>
           <div className="field-row">
             <Field
               name="day_of_week"
@@ -362,48 +384,49 @@ export default function TimetableAdminPage() {
               onClick={() => {
                 setEditingId("");
                 setEntry(emptyEntry);
+                setShowClassForm(false);
               }}
             >
               Cancel editing
             </button>
           )}
-        </form>
-      </section>
-
-      <section className="timetable-section">
-        <h2>Base timetable</h2>
-        <div className="timetable-list">
-          {entries.map((item) => (
-            <div className="timetable-row" key={item.id}>
-              <div>
-                <span>{DAYS[Number(item.day_of_week) - 1]}</span>
-                <strong>{item.course_code} · {item.course_title}</strong>
-                <p>{timeValue(item.start_time)}–{timeValue(item.end_time)} · {item.venue}</p>
-              </div>
-              <div className="row-actions">
-                <button className="button secondary" onClick={() => editEntry(item)}>
-                  Edit
-                </button>
-                <button
-                  className="delete-button"
-                  disabled={Boolean(busy)}
-                  onClick={() => deleteEntry(item)}
-                >
-                  {busy === `delete:${item.id}` ? "Deleting…" : "Delete"}
-                </button>
-              </div>
-            </div>
-          ))}
+        </form>}
+        <div className="timetable-day-grid">
+          {DAYS.map((day, index) => {
+            const dayEntries = entries.filter((item) => Number(item.day_of_week) === index + 1);
+            return (
+              <article className="timetable-day-card" key={day}>
+                <div className="timetable-day-heading"><h3>{day}</h3><span>{dayEntries.length}</span></div>
+                {dayEntries.length ? dayEntries.map((item) => (
+                  <div className="timetable-class" key={item.id}>
+                    <strong>{item.course_code}</strong>
+                    <p>{item.course_title}</p>
+                    <small>{timeValue(item.start_time)}–{timeValue(item.end_time)} · {item.venue}</small>
+                    <div className="row-actions">
+                      <button className="button secondary" onClick={() => editEntry(item)}>Edit</button>
+                      <button className="delete-button" disabled={Boolean(busy)} onClick={() => deleteEntry(item)}>
+                        {busy === `delete:${item.id}` ? "Deleting…" : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                )) : <p className="timetable-day-empty">No class</p>}
+              </article>
+            );
+          })}
         </div>
       </section>
 
       <section className="timetable-section">
-        <h2>Automation settings</h2>
-        <p>
-          Automation is safe by default: it stays paused until a group is selected
-          and the master switch is enabled.
-        </p>
-        <form onSubmit={saveSettings}>
+        <div className="section-heading compact">
+          <div>
+            <h2>Automatic reminder settings</h2>
+            <p>{settings.auto_send_enabled ? "Reminders are on." : "Reminders are paused."} Class alerts are sent {settings.class_now_lead_minutes} minutes before class.</p>
+          </div>
+          <button type="button" className="button secondary" onClick={() => setShowSettingsForm((current) => !current)}>
+            {showSettingsForm ? "Close settings" : "Edit settings"}
+          </button>
+        </div>
+        {showSettingsForm && <form className="timetable-edit-form" onSubmit={saveSettings}>
           <label className="toggle-row">
             <input
               type="checkbox"
@@ -411,31 +434,31 @@ export default function TimetableAdminPage() {
               checked={settings.auto_send_enabled}
               onChange={updateSetting}
             />
-            <span><strong>Enable automatic timetable messages</strong><small>Master pause switch</small></span>
+            <span><strong>Send schedule reminders automatically</strong><small>Turn all automatic schedule messages on or off</small></span>
           </label>
           <label className="toggle-row">
             <input type="checkbox" name="evening_enabled" checked={settings.evening_enabled} onChange={updateSetting} />
-            <span><strong>Tomorrow’s Schedule</strong><small>Evening preview</small></span>
+            <span><strong>Send tomorrow’s schedule</strong><small>Send it the evening before</small></span>
           </label>
           <label className="toggle-row">
             <input type="checkbox" name="morning_enabled" checked={settings.morning_enabled} onChange={updateSetting} />
-            <span><strong>Today’s Schedule</strong><small>Morning refresh</small></span>
+            <span><strong>Send today’s schedule</strong><small>Send it again in the morning</small></span>
           </label>
           <label className="toggle-row">
             <input type="checkbox" name="class_now_enabled" checked={settings.class_now_enabled} onChange={updateSetting} />
-            <span><strong>Class Starting Soon</strong><small>One alert per class block</small></span>
+            <span><strong>Send a class-starting-soon alert</strong><small>One alert before each class</small></span>
           </label>
           <div className="field-row">
             <Field name="evening_time" label="Evening time" type="time" value={settings.evening_time} onChange={updateSetting} />
             <Field name="morning_time" label="Morning time" type="time" value={settings.morning_time} onChange={updateSetting} />
           </div>
           <div className="field-row">
-            <Field name="class_now_lead_minutes" label="Starting-soon lead (minutes)" type="number" min="0" max="60" value={settings.class_now_lead_minutes} onChange={updateSetting} />
-            <Field name="grace_minutes" label="Late-send grace (minutes)" type="number" min="1" max="30" value={settings.grace_minutes} onChange={updateSetting} />
+            <Field name="class_now_lead_minutes" label="How many minutes before class?" type="number" min="0" max="60" value={settings.class_now_lead_minutes} onChange={updateSetting} />
+            <Field name="grace_minutes" label="How many minutes late can a reminder still go out?" type="number" min="1" max="30" value={settings.grace_minutes} onChange={updateSetting} />
           </div>
           <Field
             name="target_group_id"
-            label="400-level material group"
+            label="WhatsApp group for reminders"
             options={[
               { value: "", label: "Choose a WhatsApp group" },
               ...groups.map((group) => ({ value: group.id, label: group.name })),
@@ -444,7 +467,7 @@ export default function TimetableAdminPage() {
             onChange={updateSetting}
           />
           <div className="skip-date-control">
-            <Field name="skip_date" label="Skip date (holiday, strike, exams)" type="date" value={skipDate} onChange={(event) => setSkipDate(event.target.value)} />
+            <Field name="skip_date" label="Do not send reminders on this date" type="date" value={skipDate} onChange={(event) => setSkipDate(event.target.value)} />
             <button
               type="button"
               className="button secondary"
@@ -457,7 +480,7 @@ export default function TimetableAdminPage() {
                 setSkipDate("");
               }}
             >
-              Add skip date
+              Add date
             </button>
           </div>
           {!!settings.skip_dates?.length && (
@@ -479,14 +502,14 @@ export default function TimetableAdminPage() {
             </div>
           )}
           <button className="button primary" disabled={busy === "settings"}>
-            {busy === "settings" ? "Saving…" : "Save automation settings"}
+            {busy === "settings" ? "Saving…" : "Save reminder settings"}
           </button>
-        </form>
+        </form>}
       </section>
 
       <section className="timetable-section">
-        <h2>Safe message preview</h2>
-        <p>Build the exact message without sending anything.</p>
+        <h2>Preview a reminder</h2>
+        <p>See the exact message. Nothing will be sent.</p>
         <div className="field-row">
           <Field name="preview_date" label="Schedule date" type="date" value={previewDate} onChange={(event) => setPreviewDate(event.target.value)} />
           <Field

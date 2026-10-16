@@ -8,6 +8,7 @@ export default function FormPage({
   children,
   back = "/",
   backLabel,
+  wide = false,
 }) {
   const resolvedBackLabel =
     backLabel || (back === "/admin" ? "admin workspace" : "overview");
@@ -17,7 +18,7 @@ export default function FormPage({
       <Link className="back-link" href={back}>
         ← Back to {resolvedBackLabel}
       </Link>
-      <div className="form-layout">
+      <div className={`form-layout${wide ? " form-layout-wide" : ""}`}>
         <div className="form-intro">
           <span className="intro-icon">
             <Icon name={icon} size={28} />
