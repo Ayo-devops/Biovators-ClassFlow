@@ -113,6 +113,17 @@
   color: #53675b;
   white-space: pre-line;
 }
+@media (min-width: 701px) {
+  .home-focus-grid .simple-list {
+    padding: 0 22px;
+  }
+  .home-focus-grid .compact-empty {
+    padding: 28px 22px;
+  }
+  .latest-notice article {
+    padding: 0 22px 20px;
+  }
+}
 .focused-page-panel {
   max-width: 1040px;
 }
