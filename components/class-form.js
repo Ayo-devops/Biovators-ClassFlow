@@ -5,6 +5,7 @@ import FormPage, { Field } from "./form-page";
 import Icon from "./icon";
 import { supabase } from "../lib/supabase";
 import { uploadClassFile } from "../lib/upload-class-file";
+import FilePicker from "./file-picker";
 const configs = {
   register: {
     title: "A little reminder. A lot less worry.",
@@ -346,13 +347,13 @@ export default function ClassForm({ kind }) {
             )}
             {kind === "submit" && (
               <div className="field">
-                <label htmlFor="assignment_files">Files (optional)</label>
-                <input
+                <label>Files (optional)</label>
+                <FilePicker
                   key={fileInputKey}
                   id="assignment_files"
-                  type="file"
                   multiple
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png"
+                  files={assignmentFiles}
                   onChange={(event) => setAssignmentFiles([...event.target.files].slice(0, 5))}
                 />
                 <span className="field-help">Add up to 5 files. Each file can be up to 20 MB.</span>

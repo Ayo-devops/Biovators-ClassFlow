@@ -14,6 +14,7 @@ export default function Icon({ name = "grid", size = 20 }) {
     users:
       "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M17 3a4 4 0 0 1 0 8",
     download: "M12 3v12 M7 10l5 5 5-5 M4 16v5h16v-5",
+    upload: "M12 21V9 M7 14l5-5 5 5 M4 8V3h16v5",
     check: "M5 12l4 4L19 6",
     shield: "M12 2l9 4v6c0 5-9 10-9 10S3 17 3 12V6z M8 12l3 3 5-6",
     send: "M22 2L11 13 M22 2l-7 20-4-9-9-4z",

@@ -5,6 +5,7 @@ import Icon from "../../../components/icon";
 import WorkspaceHeading from "../../../components/workspace-heading";
 import { useWorkspaceSession } from "../../../lib/use-workspace-session";
 import { uploadClassFile } from "../../../lib/upload-class-file";
+import FilePicker from "../../../components/file-picker";
 
 const emptyForm = { courseCode: "", courseTitle: "", title: "", description: "" };
 
@@ -63,7 +64,7 @@ export default function AdminMaterialsPage() {
       <div className="field-row"><label className="field"><span>Course code</span><input required value={form.courseCode} onChange={(event) => setForm({ ...form, courseCode: event.target.value })} placeholder="BME 411" /></label><label className="field"><span>Course title</span><input required value={form.courseTitle} onChange={(event) => setForm({ ...form, courseTitle: event.target.value })} placeholder="Biomaterials" /></label></div>
       <label className="field"><span>Material title</span><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Week 3 lecture slides" /></label>
       <label className="field"><span>Short description (optional)</span><textarea rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
-      <label className="field"><span>File (maximum 20 MB)</span><input required type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" onChange={(event) => setFile(event.target.files?.[0] || null)} /></label>
+      <div className="field"><span>File (maximum 20 MB)</span><FilePicker id="material_file" files={file ? [file] : []} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" onChange={(event) => setFile(event.target.files?.[0] || null)} /></div>
       <button className="button primary" disabled={busy === "upload"}>{busy === "upload" ? "Uploading…" : "Upload material"}<Icon name="arrow" size={16} /></button>
     </form></section>}
     <section className="panel focused-page-panel material-admin-list">{loading ? <div className="skeleton-list"><div className="skeleton" /></div> : items.length ? <div className="management-list">{items.map((item) => <article key={item.id}><span className="list-icon"><Icon name="book" size={18} /></span><div><small>{item.course_code} · {item.course_title}</small><h3>{item.title}</h3><p>{item.file_name}</p></div>{workspace.isAdmin && <button className="button danger" disabled={Boolean(busy)} onClick={() => remove(item)}>{busy === item.id ? "Deleting…" : "Delete"}</button>}</article>)}</div> : <div className="empty-state"><h3>No materials uploaded</h3><p>Use the form above to add the first course file.</p></div>}</section>

@@ -1180,6 +1180,22 @@ button {
 .material-upload-panel form { padding: 0 22px 25px; }
 .material-upload-panel .field > span { color: #506747; font-size: 12px; font-weight: 600; }
 .material-admin-list { margin-top: 0; }
+@media (min-width: 701px) {
+  .focused-page-panel > .wide-search {
+    width: calc(100% - 44px);
+    max-width: 520px;
+    margin: 22px 22px 16px;
+  }
+  .focused-page-panel > .page-filters {
+    padding-top: 22px;
+  }
+  .focused-page-panel > .management-list,
+  .focused-page-panel > .student-list,
+  .focused-page-panel > .noticeboard-list {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+}
 .assignment-details b {
   display: block;
   color: #415d40;
@@ -1645,6 +1661,56 @@ button {
 }
 .field-help {
   margin: 11px 2px 0;
+}
+.file-picker {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 50px;
+  overflow: hidden;
+  border: 1px solid #dfe5d8;
+  border-radius: 9px;
+  background: #fcfdf9;
+  cursor: pointer;
+}
+.file-picker:focus-within {
+  outline: 2px solid #88a878;
+  outline-offset: 2px;
+}
+.file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.file-picker-button {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 17px;
+  background: #195640;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.file-picker-status {
+  min-width: 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #a15343;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-picker.has-file .file-picker-status {
+  color: #356642;
+}
+.file-picker:hover .file-picker-button {
+  background: #226b50;
 }
 .row-actions {
   display: flex;
