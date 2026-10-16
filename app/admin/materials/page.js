@@ -37,10 +37,28 @@ export default function AdminMaterialsPage() {
     if (!file) { setError("Choose a file to upload."); return; }
     setBusy("upload");
     try {
-      await uploadClassFile({ file, accessToken: workspace.accessToken, kind: "material", courseCode: form.courseCode, record: form });
+      const uploaded = await uploadClassFile({ file, accessToken: workspace.accessToken, kind: "material", courseCode: form.courseCode, record: form });
       setForm(emptyForm); setFile(null); formElement.reset();
-      setNotice("Study material uploaded."); await load();
+      setNotice(uploaded.aiProcessing?.status === "ready"
+        ? "Study material uploaded and prepared for the AI assistant."
+        : `Study material uploaded. AI preparation: ${uploaded.aiProcessing?.error || "not completed yet"}`);
+      await load();
     } catch (uploadError) { setError(uploadError.message); }
+    finally { setBusy(""); }
+  }
+
+  async function prepareForAi() {
+    setBusy("ai"); setError(""); setNotice("");
+    try {
+      const response = await fetch("/api/materials/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${workspace.accessToken}` },
+        body: "{}",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Materials could not be prepared for AI.");
+      setNotice(`${data.processed} material${data.processed === 1 ? "" : "s"} prepared for AI.${data.unsupported ? ` ${data.unsupported} file format${data.unsupported === 1 ? " is" : "s are"} not supported yet.` : ""}${data.failed ? ` ${data.failed} failed.` : ""}`);
+    } catch (processingError) { setError(processingError.message); }
     finally { setBusy(""); }
   }
 
@@ -60,7 +78,7 @@ export default function AdminMaterialsPage() {
     <WorkspaceHeading eyebrow="ADMIN · MATERIALS" title="Study materials" description="Upload notes and files under the right course." user={workspace.user} role={workspace.role} onSignOut={workspace.signOut} />
     {(workspace.error || error) && <div className="notice error" role="alert">{workspace.error || error}</div>}
     {notice && <div className="notice success" role="status">{notice}</div>}
-    {!workspace.loading && workspace.isAdmin && <section className="panel material-upload-panel"><div className="section-heading"><div><p className="eyebrow">ADD A FILE</p><h2>Upload course material</h2></div></div><form onSubmit={submit}>
+    {!workspace.loading && workspace.isAdmin && <section className="panel material-upload-panel"><div className="section-heading"><div><p className="eyebrow">ADD A FILE</p><h2>Upload course material</h2><p>PDF, DOCX, PPTX, XLSX and text files can also teach the WhatsApp assistant.</p></div><button type="button" className="button secondary" disabled={Boolean(busy)} onClick={prepareForAi}>{busy === "ai" ? "Preparing…" : "Prepare existing files for AI"}</button></div><form onSubmit={submit}>
       <div className="field-row"><label className="field"><span>Course code</span><input required value={form.courseCode} onChange={(event) => setForm({ ...form, courseCode: event.target.value })} placeholder="BME 411" /></label><label className="field"><span>Course title</span><input required value={form.courseTitle} onChange={(event) => setForm({ ...form, courseTitle: event.target.value })} placeholder="Biomaterials" /></label></div>
       <label className="field"><span>Material title</span><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Week 3 lecture slides" /></label>
       <label className="field"><span>Short description (optional)</span><textarea rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>

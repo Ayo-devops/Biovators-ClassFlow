@@ -15,6 +15,7 @@ ClassFlow is the shared academic workspace for Biovators. It brings our assignme
 - Resolves our live weekly timetable, one-off changes, and safe automated WhatsApp schedule previews.
 - Gives students a secure way to add or replace their reminder number.
 - Supports private one-student delivery tests before a class-wide message.
+- Organizes private course files and grounds WhatsApp AI answers in searchable excerpts from uploaded class materials.
 - Works as an installable progressive web app with an offline fallback page.
 - Provides role-based access for the Super Admin, administrators, and course representatives.
 
@@ -33,7 +34,7 @@ Permissions are enforced by the server. Hiding an action in the interface is not
 | Service | Responsibility |
 | --- | --- |
 | Next.js app on Vercel | User interface, API routes, authentication checks, and delivery orchestration |
-| Supabase | Authentication and storage for students, assignments, and announcements |
+| Supabase | Authentication, application data, private class files, and extracted material text |
 | Brevo | Transactional email delivery |
 | OCI WhatsApp worker | Persistent `whatsapp-web.js` session, direct messages, group messages, and the Gemini chat assistant |
 
@@ -117,6 +118,14 @@ Timetable automation adds `timetable_entries`, `timetable_changes`,
 `supabase/migrations/202610140001_timetable.sql` to the Supabase project before
 opening the timetable administration pages. The migration seeds the official
 14 class blocks and leaves automatic delivery paused.
+
+Class files use the private `classflow-files` storage bucket plus
+`assignment_files` and `course_materials`. Apply
+`supabase/migrations/202610160001_class_files.sql`, followed by
+`supabase/migrations/202610160002_material_ai.sql`. The second migration stores
+bounded text extracted from PDF, DOCX, PPTX, XLSX, and plain-text materials so
+the WhatsApp assistant can retrieve relevant passages without exposing full
+files or requiring a paid vector database.
 
 Workspace roles are stored in trusted Supabase `app_metadata.role` values. The supported invited roles are `admin` and `rep`; addresses in `CLASSFLOW_ADMIN_EMAILS` are treated as `super_admin`.
 

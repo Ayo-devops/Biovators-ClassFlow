@@ -1,5 +1,6 @@
 import { authorizeAdmin } from "../../../lib/admin-auth";
 import { filesSupabase, signedFiles } from "../../../lib/class-files-server";
+import { processMaterialForAi } from "../../../lib/material-ai-server";
 
 export async function GET() {
   if (!filesSupabase) return Response.json([]);
@@ -33,5 +34,6 @@ export async function POST(request) {
     uploaded_by: authorization.user.id,
   }).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json(data, { status: 201 });
+  const aiProcessing = await processMaterialForAi(data);
+  return Response.json({ ...data, aiProcessing }, { status: 201 });
 }

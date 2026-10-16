@@ -9,16 +9,16 @@ import { supabase } from "../../../lib/supabase";
 export default function SetPassword() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(Boolean(supabase));
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    supabase ? "" : "Workspace authentication is not configured.",
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
-      setError("Workspace authentication is not configured.");
-      setChecking(false);
       return undefined;
     }
 
