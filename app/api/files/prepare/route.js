@@ -16,8 +16,11 @@ export async function POST(request) {
   const body = await request.json();
   const validationError = validateFileDetails(body);
   if (validationError) return Response.json({ error: validationError }, { status: 400 });
-  if (!["assignment", "material"].includes(body.kind)) {
+  if (!["assignment", "material", "test-assignment"].includes(body.kind)) {
     return Response.json({ error: "Choose where this file belongs." }, { status: 400 });
+  }
+  if (body.kind === "test-assignment" && !["super_admin", "admin"].includes(authorization.actor)) {
+    return Response.json({ error: "Administrator access is required for private delivery tests." }, { status: 403 });
   }
   if (body.kind === "material" && !["super_admin", "admin"].includes(authorization.actor)) {
     return Response.json({ error: "Administrator access is required to upload study materials." }, { status: 403 });
@@ -25,7 +28,9 @@ export async function POST(request) {
 
   const folder = body.kind === "assignment"
     ? `assignments-${body.assignmentId || "new"}`
-    : `materials-${body.courseCode || "course"}`;
+    : body.kind === "test-assignment"
+      ? "test-assignments"
+      : `materials-${body.courseCode || "course"}`;
   const path = makeStoragePath(folder, body.fileName);
   const { data, error } = await filesSupabase.storage
     .from(FILE_BUCKET)

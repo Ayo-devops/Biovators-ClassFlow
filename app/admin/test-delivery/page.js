@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import FormPage, { Field } from "../../../components/form-page";
+import FilePicker from "../../../components/file-picker";
 import Icon from "../../../components/icon";
 import { supabase } from "../../../lib/supabase";
+import { uploadPrivateTestFile } from "../../../lib/upload-class-file";
 
 const initialForm = {
   studentId: "",
@@ -24,6 +26,8 @@ export default function TestDelivery() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
@@ -88,29 +92,67 @@ export default function TestDelivery() {
     }
     if (
       !window.confirm(
-        `Send this private test assignment only to ${selectedStudent.student_name} by email and WhatsApp? It will not be saved or shown to Biovators.`,
+        `Send this private test assignment only to ${selectedStudent.student_name} by email and WhatsApp? It will not be published or shown to Biovators.`,
       )
     ) {
       return;
     }
 
     setSending(true);
+    let uploadedAttachment = null;
     try {
+      uploadedAttachment = file
+        ? await uploadPrivateTestFile({ file, accessToken })
+        : null;
       const response = await fetch("/api/test-assignment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, attachment: uploadedAttachment }),
       });
       const payload = await response.json();
       if (!response.ok) throw Error(payload.error || "Test delivery failed.");
       setResult(payload);
     } catch (sendError) {
+      if (uploadedAttachment?.path) {
+        await fetch("/api/test-assignment", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ path: uploadedAttachment.path }),
+        }).catch(() => undefined);
+      }
       setError(sendError.message);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function removeTestFile() {
+    if (!result?.attachment?.path) return;
+    setCleaning(true);
+    setError("");
+    try {
+      const response = await fetch("/api/test-assignment", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ path: result.attachment.path }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw Error(payload.error || "Could not remove the test attachment.");
+      setResult((current) => ({ ...current, attachment: null, attachmentRemoved: true }));
+      setFile(null);
+    } catch (removeError) {
+      setError(removeError.message);
+    } finally {
+      setCleaning(false);
     }
   }
 
@@ -122,7 +164,7 @@ export default function TestDelivery() {
       back="/admin"
     >
       <h2>One-student test</h2>
-      <p>This test is not saved, published, or sent to the rest of Biovators.</p>
+      <p>This assignment is not published or sent to the rest of Biovators.</p>
       {error && (
         <div className="notice error" role="alert">
           {error}
@@ -134,10 +176,17 @@ export default function TestDelivery() {
           role="status"
         >
           Finished for {result.target.name}: {result.results.emails} email and{" "}
-          {result.results.whatsapp} WhatsApp message sent. Nothing was saved.
+          {result.results.whatsapp} WhatsApp message sent. No assignment was published.
+          {result.attachment && ` The private test attachment link is active for 24 hours.`}
+          {result.attachmentRemoved && " The test attachment has been removed from storage."}
           {result.results.failures.length > 0 &&
             ` ${result.results.failures.length} channel(s) failed.`}
         </div>
+      )}
+      {result?.attachment && (
+        <button type="button" className="button secondary" disabled={cleaning} onClick={removeTestFile}>
+          {cleaning ? "Removing test file…" : "Remove test file after checking it"}
+        </button>
       )}
       {loading ? (
         <p role="status">Loading registered students…</p>
@@ -217,6 +266,16 @@ export default function TestDelivery() {
             value={form.description}
             onChange={update}
           />
+          <div className="field">
+            <span>Test attachment (optional)</span>
+            <FilePicker
+              id="test_assignment_file"
+              files={file ? [file] : []}
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png"
+              onChange={(event) => setFile(event.target.files?.[0] || null)}
+            />
+            <span className="field-help">Choose one small file. Its private download link will work for 24 hours.</span>
+          </div>
           <button className="button primary" disabled={sending || !students.length}>
             {sending ? "Sending privately…" : "Send private test"}
             <Icon name="send" size={17} />
