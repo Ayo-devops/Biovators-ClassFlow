@@ -42,6 +42,7 @@ export default function AdminHomePage() {
     { href: "/admin/timetable/changes", title: "Update one class", text: "Move, cancel or add a class without changing the weekly timetable.", icon: "calendar" },
   ];
   const managementActions = [
+    { href: "/admin/help", title: "Help and tutorials", text: "Simple guides for administrators and course representatives.", icon: "book" },
     ...(workspace.isAdmin ? [
       { href: "/admin/students", title: "Students and reminders", text: "View registrations and safely test one-student delivery.", icon: "users" },
       { href: "/admin/timetable", title: "Automated timetable", text: "Manage weekly classes, timing and delivery settings.", icon: "clock" },

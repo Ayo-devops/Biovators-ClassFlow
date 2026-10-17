@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.CLASSFLOW_BUILD_DIR || ".next",
   async headers() {
     return [
       {

@@ -663,6 +663,119 @@
   background: #edf0eb;
   color: #63756b;
 }
+.system-health {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid #d9e2d5;
+  border-radius: 13px;
+  background: #fff;
+  padding: 18px 20px;
+}
+.system-health.healthy {
+  background: #f5faf2;
+  border-color: #bdd4b6;
+}
+.system-health.unhealthy {
+  background: #fff7f3;
+  border-color: #edc9bb;
+}
+.health-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #2d6345;
+  background: #deedcf;
+}
+.unhealthy .health-icon {
+  color: #934934;
+  background: #f7ddd3;
+}
+.system-health h2,
+.install-tutorial h2 {
+  font-size: 17px;
+  margin: 4px 0 2px;
+}
+.system-health p,
+.install-tutorial p {
+  font-size: 12px;
+  color: #5d7165;
+}
+.tutorial-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.tutorial-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: #fff;
+}
+.tutorial-card h3 {
+  font-size: 15px;
+  margin: 2px 0 5px;
+}
+.tutorial-card p,
+.tutorial-card li {
+  color: #64766b;
+  font-size: 12px;
+}
+.tutorial-card ol {
+  margin: 14px 0;
+  padding-left: 19px;
+  display: grid;
+  gap: 7px;
+}
+.tutorial-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: #24583d;
+  font-size: 12px;
+  font-weight: 750;
+}
+.install-tutorial {
+  margin-top: 30px;
+  padding: 22px;
+  border-radius: 13px;
+  background: #173f33;
+  color: #fff;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 17px;
+  align-items: center;
+}
+.install-tutorial .task-icon {
+  background: #d7e8b6;
+}
+.install-tutorial .eyebrow,
+.install-tutorial p,
+.install-tutorial small {
+  color: #c7d9cf;
+}
+.install-tutorial p + p {
+  margin-top: 5px;
+}
+.install-tutorial small {
+  display: block;
+  margin-top: 9px;
+  font-size: 10px;
+}
+.install-tutorial .button {
+  color: #173f33;
+  background: #f8fbf5;
+  border-color: #f8fbf5;
+  white-space: nowrap;
+}
 .wide-search {
   display: flex;
   margin-bottom: 16px;
@@ -799,6 +912,19 @@
   }
   .task-grid {
     grid-template-columns: 1fr;
+  }
+  .tutorial-grid {
+    grid-template-columns: 1fr;
+  }
+  .system-health,
+  .install-tutorial {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .system-health .button,
+  .install-tutorial .button {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
   }
   .management-list article,
   .student-list article {
