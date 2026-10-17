@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import Icon from "../../components/icon";
 import { formatDate } from "../../lib/deadlines";
 
@@ -31,7 +30,6 @@ export default function AnnouncementsPage() {
   return <>
     <div className="page-heading">
       <div><p className="eyebrow">WORD AROUND BIOVATORS</p><h1>Noticeboard<span>.</span></h1><p>Important class updates, arranged with the newest first.</p></div>
-      <Link className="button primary" href="/announce"><Icon name="plus" size={17} />Post announcement</Link>
     </div>
     {error && <div className="notice error" role="alert">{error}<button className="text-button" onClick={load}>Try again</button></div>}
     <section className="panel focused-page-panel">

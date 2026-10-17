@@ -55,9 +55,9 @@ export default function AdminHomePage() {
     {workspace.error && <div className="notice error" role="alert">{workspace.error}<button className="text-button" onClick={workspace.retry}>Try again</button></div>}
     {workspace.loading ? <div className="skeleton-list"><div className="skeleton" /><div className="skeleton" /></div> : workspace.user && <>
       <section className="stats compact-stats" aria-label="Workspace summary">
-        <Link href="/admin/assignments" className="stat-card"><div><span className="stat-icon green"><Icon name="book" /></span><span className="stat-value">{dataLoading ? "—" : counts.assignments}</span></div><h3>Assignments</h3><p>View and manage our tasks.</p></Link>
-        <Link href="/admin/announcements" className="stat-card"><div><span className="stat-icon purple"><Icon name="bell" /></span><span className="stat-value">{dataLoading ? "—" : counts.announcements}</span></div><h3>Announcements</h3><p>Review our published notices.</p></Link>
-        {workspace.isAdmin && <Link href="/admin/students" className="stat-card"><div><span className="stat-icon orange"><Icon name="users" /></span><span className="stat-value">{dataLoading ? "—" : counts.students}</span></div><h3>Registered students</h3><p>Manage reminder recipients.</p></Link>}
+        <Link href="/admin/assignments" className="stat-card"><div><span className="stat-icon green"><Icon name="book" /></span>{dataLoading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{counts.assignments}</span>}</div><h3>Assignments</h3><p>View and manage our tasks.</p></Link>
+        <Link href="/admin/announcements" className="stat-card"><div><span className="stat-icon purple"><Icon name="bell" /></span>{dataLoading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{counts.announcements}</span>}</div><h3>Announcements</h3><p>Review our published notices.</p></Link>
+        {workspace.isAdmin && <Link href="/admin/students" className="stat-card"><div><span className="stat-icon orange"><Icon name="users" /></span>{dataLoading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{counts.students}</span>}</div><h3>Registered students</h3><p>Manage reminder recipients.</p></Link>}
       </section>
 
       <section className="workspace-section">

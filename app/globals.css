@@ -1347,6 +1347,18 @@ button {
   padding: 8px;
   margin-top: -8px;
 }
+.footer-admin-link {
+  color: #84917d;
+  font-size: 9px;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+.footer-admin-link:hover,
+.footer-admin-link:focus-visible {
+  color: #45624d;
+  text-decoration-color: currentColor;
+}
 .mobile-nav,
 .mobile-brand,
 .mobile-install {
@@ -1399,6 +1411,18 @@ button {
   background: linear-gradient(90deg, #f2f4ed, #e9eee2, #f2f4ed);
   background-size: 200%;
   animation: shimmer 1.5s infinite;
+}
+.stat-value-skeleton,
+.ticker-loading-line {
+  display: inline-block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f2f4ed, #e4eadc, #f2f4ed);
+  background-size: 200%;
+  animation: shimmer 1.5s infinite;
+}
+.stat-value-skeleton {
+  width: 34px;
+  height: 27px;
 }
 @keyframes shimmer {
   to {
@@ -1842,19 +1866,31 @@ button {
 }
 .announcement-ticker-window { overflow: hidden; white-space: nowrap; }
 .announcement-ticker-text {
-  display: inline-flex;
-  gap: 20px;
-  min-width: max-content;
+  display: grid;
+  min-width: 0;
+  gap: 2px;
   font-size: 11px;
-  animation: announcement-scroll 24s linear infinite;
 }
-.announcement-ticker:hover .announcement-ticker-text,
-.announcement-ticker:focus .announcement-ticker-text { animation-play-state: paused; }
-.announcement-ticker-text span { color: #64745d; }
+.announcement-ticker-text strong,
+.announcement-ticker-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.announcement-ticker-text strong { white-space: nowrap; }
+.announcement-ticker-text span {
+  display: -webkit-box;
+  color: #64745d;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 .announcement-ticker > svg { margin-right: 15px; }
-@keyframes announcement-scroll {
-  from { transform: translateX(100%); }
-  to { transform: translateX(-100%); }
+.ticker-skeleton {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.ticker-loading-line {
+  width: min(420px, 82%);
+  height: 12px;
 }
 .timetable-list {
   display: grid;

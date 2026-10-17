@@ -70,18 +70,21 @@ export default function HomePage() {
         </div>
       )}
 
-      {!loading && latestNotice && (
+      {loading ? (
+        <div className="announcement-ticker ticker-skeleton" aria-hidden="true">
+          <span className="announcement-ticker-label"><Icon name="bell" size={15} />Latest</span>
+          <span className="ticker-loading-line" />
+        </div>
+      ) : latestNotice ? (
         <Link className="announcement-ticker" href="/announcements" aria-label={`Latest announcement: ${latestNotice.title}`}>
           <span className="announcement-ticker-label"><Icon name="bell" size={15} />Latest</span>
-          <span className="announcement-ticker-window">
-            <span className="announcement-ticker-text">
-              <strong>{latestNotice.title}</strong>
-              <span>{latestNotice.body.length > 150 ? `${latestNotice.body.slice(0, 147)}…` : latestNotice.body}</span>
-            </span>
+          <span className="announcement-ticker-text">
+            <strong>{latestNotice.title}</strong>
+            <span>{latestNotice.body}</span>
           </span>
           <Icon name="arrow" size={16} />
         </Link>
-      )}
+      ) : null}
 
       <section className="welcome-panel">
         <div>
@@ -98,15 +101,15 @@ export default function HomePage() {
 
       <section className="stats" aria-label="Class overview">
         <div className="stat-card">
-          <div><span className="stat-icon orange"><Icon name="clock" /></span><span className="stat-value">{loading ? "—" : dueThisWeek}</span></div>
+          <div><span className="stat-icon orange"><Icon name="clock" /></span>{loading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{dueThisWeek}</span>}</div>
           <h3>Due this week</h3><p>Deadlines that need our attention.</p>
         </div>
         <div className="stat-card">
-          <div><span className="stat-icon green"><Icon name="book" /></span><span className="stat-value">{loading ? "—" : assignments.length}</span></div>
+          <div><span className="stat-icon green"><Icon name="book" /></span>{loading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{assignments.length}</span>}</div>
           <h3>All assignments</h3><p>Everything currently on our list.</p>
         </div>
         <div className="stat-card">
-          <div><span className="stat-icon purple"><Icon name="bell" /></span><span className="stat-value">{loading ? "—" : announcements.length}</span></div>
+          <div><span className="stat-icon purple"><Icon name="bell" /></span>{loading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{announcements.length}</span>}</div>
           <h3>Class notices</h3><p>Updates shared with Biovators.</p>
         </div>
       </section>

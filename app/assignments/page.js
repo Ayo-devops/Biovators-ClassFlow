@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import Icon from "../../components/icon";
 import { daysUntil, deadlineStatus, formatDate } from "../../lib/deadlines";
 
@@ -47,7 +46,6 @@ export default function AssignmentsPage() {
     <>
       <div className="page-heading">
         <div><p className="eyebrow">OUR WORK, IN ONE PLACE</p><h1>Assignments<span>.</span></h1><p>Find a task, check its deadline, and see exactly how to submit it.</p></div>
-        <Link className="button primary" href="/submit"><Icon name="plus" size={17} />Add assignment</Link>
       </div>
       {error && <div className="notice error" role="alert">{error}<button className="text-button" onClick={load}>Try again</button></div>}
       <section className="panel focused-page-panel">

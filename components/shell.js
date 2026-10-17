@@ -67,15 +67,6 @@ export default function Shell({ children }) {
         </div>
         <div className="sidebar-bottom">
           <InstallApp />
-          {!adminMode && (
-            <Link
-              className={`nav-link ${path.startsWith("/admin") ? "active" : ""}`}
-              href="/admin"
-            >
-              <Icon name="shield" />
-              Admin workspace
-            </Link>
-          )}
           <p>Made for our next chapter.</p>
         </div>
       </aside>
@@ -102,7 +93,11 @@ export default function Shell({ children }) {
         </main>
         <footer className="page-footer">
           <span>ClassFlow · Biovators, connected.</span>
-          <Link href="/admin">Admin workspace ↗</Link>
+          {adminMode ? (
+            <Link href="/admin">Admin workspace ↗</Link>
+          ) : (
+            <Link className="footer-admin-link" href="/admin/login">Admin</Link>
+          )}
           <span>A clearer day starts with us.</span>
         </footer>
       </div>
