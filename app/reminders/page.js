@@ -1,21 +1,63 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "../../components/icon";
+import InstallApp from "../../components/install-app";
 
-export const metadata = { title: "Reminders" };
+const REGISTRATION_KEY = "classflow.reminderRegistration";
 
 export default function RemindersPage() {
+  const [registration, setRegistration] = useState(undefined);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(REGISTRATION_KEY) || "null");
+      // Registration status is intentionally remembered on this device only.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRegistration(saved && typeof saved === "object" ? saved : null);
+    } catch {
+      localStorage.removeItem(REGISTRATION_KEY);
+      setRegistration(null);
+    }
+  }, []);
+
   return <>
     <div className="page-heading">
-      <div><p className="eyebrow">A GENTLE NUDGE, RIGHT ON TIME</p><h1>My reminders<span>.</span></h1><p>Choose the action that matches what you need today.</p></div>
+      <div><h1>My reminders<span>.</span></h1><p>See whether this device is registered for class updates.</p></div>
     </div>
-    <section className="reminder-welcome panel">
-      <span className="intro-icon"><Icon name="bell" size={28} /></span>
-      <div><h2>Stay informed without checking the app every hour.</h2><p>ClassFlow can send Biovators assignment updates by email and WhatsApp. Your details are only used for our class reminders.</p></div>
+
+    {registration === undefined ? (
+      <section className="panel reminder-status-card"><div className="skeleton" /></section>
+    ) : registration ? (
+      <section className="panel reminder-status-card connected">
+        <span className="reminder-status-icon"><Icon name="check" size={24} /></span>
+        <div className="reminder-status-copy">
+          <span className="reminder-status-label">Connected on this device</span>
+          <h2>{registration.phoneLast4 ? `WhatsApp connected: +••• ••${registration.phoneLast4}` : "Email reminders connected"}</h2>
+          <p>{registration.email ? `Registered with ${registration.email}.` : "Your reminder registration is saved."} ClassFlow centrally manages delivery times.</p>
+        </div>
+        <Link className="button secondary" href="/update-phone">Update number <Icon name="arrow" size={16} /></Link>
+      </section>
+    ) : (
+      <section className="panel reminder-start-card">
+        <span className="reminder-status-icon"><Icon name="bell" size={24} /></span>
+        <div>
+          <h2>Turn on class reminders</h2>
+          <p>Add your name, email and WhatsApp number once. We’ll use them only for Biovators class updates.</p>
+        </div>
+        <Link className="button primary" href="/register">Register for reminders <Icon name="arrow" size={16} /></Link>
+      </section>
+    )}
+
+    <section className="reminder-help-card">
+      <Icon name="shield" size={19} />
+      <div><h2>Already registered elsewhere?</h2><p>This device may not remember registrations completed on another phone or browser.</p></div>
+      <Link href="/update-phone">Update my number <Icon name="arrow" size={15} /></Link>
     </section>
-    <div className="choice-grid">
-      <Link href="/register" className="choice-card"><span className="stat-icon green"><Icon name="plus" /></span><div><p className="eyebrow">NEW HERE?</p><h2>Register for reminders</h2><p>Add your name, email address and WhatsApp number to our reminder list.</p><span className="choice-action">Start registration <Icon name="arrow" size={16} /></span></div></Link>
-      <Link href="/update-phone" className="choice-card"><span className="stat-icon orange"><Icon name="clock" /></span><div><p className="eyebrow">ALREADY REGISTERED?</p><h2>Update my WhatsApp number</h2><p>Keep your existing registration and replace only the phone number attached to it.</p><span className="choice-action">Update number <Icon name="arrow" size={16} /></span></div></Link>
-    </div>
-    <div className="plain-note"><Icon name="shield" size={18} /><div><strong>Not sure which option to choose?</strong><p>If you have previously registered with your email address, choose “Update my WhatsApp number.”</p></div></div>
+
+    <section className="mobile-install" aria-label="Install ClassFlow on this phone">
+      <InstallApp />
+    </section>
   </>;
 }

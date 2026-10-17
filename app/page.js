@@ -5,11 +5,20 @@ import Link from "next/link";
 import Icon from "../components/icon";
 import { daysUntil, formatDate } from "../lib/deadlines";
 
+function countdown(date) {
+  const days = daysUntil(date);
+  if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue`;
+  if (days === 0) return "Due today";
+  if (days === 1) return "Due tomorrow";
+  return `Due in ${days} days`;
+}
+
 export default function HomePage() {
   const [assignments, setAssignments] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [welcome, setWelcome] = useState({ greeting: "Hello, Biovator 👋", date: "" });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,16 +44,24 @@ export default function HomePage() {
     // Initial network synchronization after the client mounts.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
+    const now = new Date();
+    const hour = now.getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    // The greeting deliberately follows the student's device time.
+    setWelcome({
+      greeting: `${greeting}, Biovator 👋`,
+      date: now.toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long" }),
+    });
   }, [load]);
 
   const upcoming = useMemo(
-    () =>
-      assignments
-        .filter((item) => daysUntil(item.deadline_date) >= 0)
-        .sort((a, b) => a.deadline_date.localeCompare(b.deadline_date))
-        .slice(0, 3),
+    () => assignments
+      .filter((item) => daysUntil(item.deadline_date) >= 0)
+      .sort((a, b) => a.deadline_date.localeCompare(b.deadline_date))
+      .slice(0, 5),
     [assignments],
   );
+  const nextAssignment = upcoming[0];
   const dueThisWeek = assignments.filter((item) => {
     const days = daysUntil(item.deadline_date);
     return days >= 0 && days <= 7;
@@ -53,107 +70,63 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">BIOVATORS, CONNECTED</p>
-          <h1>What matters today<span>.</span></h1>
-          <p>A simple view of our next deadlines and latest class update.</p>
-        </div>
-        <Link className="button primary" href="/assignments">
-          View assignments <Icon name="arrow" size={17} />
-        </Link>
-      </div>
+      <header className="home-greeting">
+        <div><h1>{welcome.greeting}</h1><p>{welcome.date || "Here is what matters today."}</p></div>
+        <Link className="home-reminder-link" href="/reminders"><Icon name="bell" size={17} />My reminders</Link>
+      </header>
 
-      {error && (
-        <div className="notice error" role="alert">
-          {error}<button className="text-button" onClick={load}>Try again</button>
-        </div>
-      )}
+      {error && <div className="notice error" role="alert">{error}<button className="text-button" onClick={load}>Try again</button></div>}
 
       {loading ? (
-        <div className="announcement-ticker ticker-skeleton" aria-hidden="true">
-          <span className="announcement-ticker-label"><Icon name="bell" size={15} />Latest</span>
-          <span className="ticker-loading-line" />
-        </div>
-      ) : latestNotice ? (
-        <Link className="announcement-ticker" href="/announcements" aria-label={`Latest announcement: ${latestNotice.title}`}>
-          <span className="announcement-ticker-label"><Icon name="bell" size={15} />Latest</span>
-          <span className="announcement-ticker-text">
-            <strong>{latestNotice.title}</strong>
-            <span>{latestNotice.body}</span>
-          </span>
-          <Icon name="arrow" size={16} />
-        </Link>
-      ) : null}
+        <section className="next-up-card next-up-loading" aria-label="Loading the next assignment">
+          <span className="next-up-skeleton wide" /><span className="next-up-skeleton" /><span className="next-up-skeleton short" />
+        </section>
+      ) : nextAssignment ? (
+        <section className="next-up-card">
+          <div className="next-up-copy">
+            <span className="next-up-label">Next up</span>
+            <span className="next-up-course">{nextAssignment.course_title}</span>
+            <h2>{nextAssignment.assignment_title}</h2>
+            <strong className="next-up-countdown"><Icon name="clock" size={18} />{countdown(nextAssignment.deadline_date)}</strong>
+            <p>{formatDate(nextAssignment.deadline_date)} · {nextAssignment.submission_method}</p>
+          </div>
+          <Link className="button next-up-action" href={`/assignments#assignment-${nextAssignment.id}`}>How to submit <Icon name="arrow" size={16} /></Link>
+        </section>
+      ) : (
+        <section className="next-up-card next-up-empty">
+          <span className="empty-icon"><Icon name="check" /></span>
+          <div><span className="next-up-label">Next up</span><h2>You’re all caught up 🎉</h2><p>Nothing is due right now. You can use the time to review a course.</p></div>
+          <Link className="button next-up-action" href="/materials">Browse materials <Icon name="arrow" size={16} /></Link>
+        </section>
+      )}
 
-      <section className="welcome-panel">
-        <div>
-          <span className="hero-tag"><span />OUR CLASS COMPANION</span>
-          <h2>One clear place for what comes next.</h2>
-          <p>Check the next deadline, catch up on an announcement, or make sure your reminder details are correct.</p>
-        </div>
-        <div className="welcome-actions">
-          <Link href="/assignments"><Icon name="book" />Assignments</Link>
-          <Link href="/announcements"><Icon name="bell" />Noticeboard</Link>
-          <Link href="/reminders"><Icon name="clock" />My reminders</Link>
-        </div>
+      <nav className="home-stat-chips" aria-label="Quick class overview">
+        {loading ? <><span className="home-chip-skeleton" /><span className="home-chip-skeleton" /><span className="home-chip-skeleton" /></> : <>
+          <Link href="/assignments?filter=This%20week"><Icon name="clock" size={15} />Due this week <strong>{dueThisWeek}</strong></Link>
+          <Link href="/assignments"><Icon name="book" size={15} />All assignments <strong>{assignments.length}</strong></Link>
+          <Link href="/announcements"><Icon name="bell" size={15} />Class notices <strong>{announcements.length}</strong></Link>
+        </>}
+      </nav>
+
+      <section className="home-section upcoming-section">
+        <div className="home-section-heading"><div><span>Coming up</span><h2>Upcoming assignments</h2></div><Link href="/assignments">See all <Icon name="arrow" size={15} /></Link></div>
+        {loading ? <div className="assignment-strip"><span className="strip-skeleton" /><span className="strip-skeleton" /><span className="strip-skeleton" /></div> : upcoming.length ? (
+          <div className="assignment-strip">
+            {upcoming.map((item) => <Link href={`/assignments#assignment-${item.id}`} key={item.id} className="assignment-preview-card"><span>{item.course_title}</span><strong>{item.assignment_title}</strong><small>{countdown(item.deadline_date)}</small></Link>)}
+          </div>
+        ) : <div className="home-inline-empty"><Icon name="check" /><span><strong>No upcoming assignments</strong><small>Enjoy the breathing room.</small></span></div>}
       </section>
 
-      <section className="stats" aria-label="Class overview">
-        <div className="stat-card">
-          <div><span className="stat-icon orange"><Icon name="clock" /></span>{loading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{dueThisWeek}</span>}</div>
-          <h3>Due this week</h3><p>Deadlines that need our attention.</p>
-        </div>
-        <div className="stat-card">
-          <div><span className="stat-icon green"><Icon name="book" /></span>{loading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{assignments.length}</span>}</div>
-          <h3>All assignments</h3><p>Everything currently on our list.</p>
-        </div>
-        <div className="stat-card">
-          <div><span className="stat-icon purple"><Icon name="bell" /></span>{loading ? <span className="stat-value-skeleton" aria-hidden="true" /> : <span className="stat-value">{announcements.length}</span>}</div>
-          <h3>Class notices</h3><p>Updates shared with Biovators.</p>
-        </div>
+      <section className="home-section latest-home-notice">
+        <div className="home-section-heading"><div><span>Latest notice</span><h2>Noticeboard</h2></div><Link href="/announcements">Open <Icon name="arrow" size={15} /></Link></div>
+        {loading ? <div className="notice-preview-skeleton"><span /><span /><span /></div> : latestNotice ? (
+          <Link href="/announcements" className="latest-notice-card">
+            <span className="notice-card-icon"><Icon name="bell" /></span>
+            <span className="latest-notice-copy"><small>{formatDate(latestNotice.created_at)}{latestNotice.mandatory ? " · Mandatory" : ""}</small><strong>{latestNotice.title}</strong><span>{latestNotice.body}</span></span>
+            <Icon name="arrow" size={17} />
+          </Link>
+        ) : <div className="home-inline-empty"><Icon name="bell" /><span><strong>No new notices</strong><small>Important class updates will appear here.</small></span></div>}
       </section>
-
-      <div className="home-focus-grid">
-        <section className="panel">
-          <div className="section-heading">
-            <div><p className="eyebrow">COMING UP</p><h2>Next assignments</h2></div>
-            <Link className="text-link" href="/assignments">See all <Icon name="arrow" size={15} /></Link>
-          </div>
-          {loading ? (
-            <div className="skeleton-list"><div className="skeleton" /><div className="skeleton" /></div>
-          ) : upcoming.length ? (
-            <div className="simple-list">
-              {upcoming.map((item) => (
-                <Link href={`/assignments#assignment-${item.id}`} key={item.id}>
-                  <span className="list-icon"><Icon name="book" size={18} /></span>
-                  <span><small>{item.course_title}</small><strong>{item.assignment_title}</strong><em>{formatDate(item.deadline_date)}</em></span>
-                  <Icon name="arrow" size={16} />
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="compact-empty"><strong>No upcoming assignment</strong><p>Enjoy the breathing room.</p></div>
-          )}
-        </section>
-
-        <section className="panel latest-notice">
-          <div className="section-heading">
-            <div><p className="eyebrow">LATEST UPDATE</p><h2>Noticeboard</h2></div>
-            <span className="stat-icon purple"><Icon name="bell" size={17} /></span>
-          </div>
-          {loading ? <div className="skeleton" /> : latestNotice ? (
-            <article>
-              <span className="announcement-date">{formatDate(latestNotice.created_at)}</span>
-              <h3>{latestNotice.title}</h3><p>{latestNotice.body}</p>
-              <span className="posted-by">{latestNotice.posted_by}</span>
-            </article>
-          ) : (
-            <div className="compact-empty"><strong>You’re all caught up</strong><p>New class notices will appear here.</p></div>
-          )}
-          <Link className="panel-action" href="/announcements">Open noticeboard <Icon name="arrow" size={16} /></Link>
-        </section>
-      </div>
     </>
   );
 }

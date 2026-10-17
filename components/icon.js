@@ -18,6 +18,11 @@ export default function Icon({ name = "grid", size = 20 }) {
     check: "M5 12l4 4L19 6",
     shield: "M12 2l9 4v6c0 5-9 10-9 10S3 17 3 12V6z M8 12l3 3 5-6",
     send: "M22 2L11 13 M22 2l-7 20-4-9-9-4z",
+    file: "M6 2h8l4 4v16H6z M14 2v5h5 M9 13h6 M9 17h6",
+    pdf: "M6 2h8l4 4v16H6z M14 2v5h5 M9 13h6 M9 17h4",
+    slides: "M4 4h16v12H4z M9 21l3-5 3 5 M8 9h8 M8 12h5",
+    table: "M4 4h16v16H4z M4 10h16 M10 4v16",
+    image: "M4 4h16v16H4z M7 16l4-4 3 3 3-4 3 4 M9 9h.01",
   };
   return (
     <svg

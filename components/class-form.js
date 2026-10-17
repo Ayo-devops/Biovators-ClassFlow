@@ -91,6 +91,10 @@ export default function ClassForm({ kind }) {
       Array.isArray(type) ? type[0] : "",
     ]),
   );
+  if (kind === "announce") {
+    initial.mandatory = false;
+    initial.pinned = false;
+  }
   const [form, setForm] = useState(initial),
     [loading, setLoading] = useState(false),
     [error, setError] = useState(""),
@@ -161,7 +165,7 @@ export default function ClassForm({ kind }) {
     loadWorkspaceAccess();
   }, [kind]);
 
-  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const change = (e) => setForm({ ...form, [e.target.name]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
   async function submit(e) {
     e.preventDefault();
     if (kind === "announce" && whatsappGroupId) {
@@ -240,6 +244,14 @@ export default function ClassForm({ kind }) {
             `${assignmentFiles.length} file${assignmentFiles.length === 1 ? " was" : "s were"} attached to the assignment.`,
           );
         }
+      }
+      if (kind === "register") {
+        const digits = String(form.whatsapp_number || "").replace(/\D/g, "");
+        localStorage.setItem("classflow.reminderRegistration", JSON.stringify({
+          email: form.student_email,
+          phoneLast4: digits ? digits.slice(-4) : "",
+          registeredAt: new Date().toISOString(),
+        }));
       }
       setSuccess(true);
     } catch (err) {
@@ -331,19 +343,25 @@ export default function ClassForm({ kind }) {
               />
             ))}
             {kind === "announce" && workspaceRole && (
-              <Field
-                name="whatsapp_group_id"
-                label="WhatsApp group delivery (optional)"
-                options={[
-                  { value: "", label: "Noticeboard and email only" },
-                  ...groups.map((group) => ({
-                    value: group.id,
-                    label: group.name,
-                  })),
-                ]}
-                value={whatsappGroupId}
-                onChange={(event) => setWhatsappGroupId(event.target.value)}
-              />
+              <>
+                <div className="announcement-priority-options">
+                  <label><input type="checkbox" name="mandatory" checked={form.mandatory} onChange={change} /><span><strong>Mandatory notice</strong><small>Show students that this update needs attention.</small></span></label>
+                  <label><input type="checkbox" name="pinned" checked={form.pinned} onChange={change} /><span><strong>Pin to the top</strong><small>Keep this notice above newer updates.</small></span></label>
+                </div>
+                <Field
+                  name="whatsapp_group_id"
+                  label="WhatsApp group delivery (optional)"
+                  options={[
+                    { value: "", label: "Noticeboard and email only" },
+                    ...groups.map((group) => ({
+                      value: group.id,
+                      label: group.name,
+                    })),
+                  ]}
+                  value={whatsappGroupId}
+                  onChange={(event) => setWhatsappGroupId(event.target.value)}
+                />
+              </>
             )}
             {kind === "submit" && (
               <div className="field">

@@ -68,7 +68,15 @@ export default function UpdatePhonePage() {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) setError(data.error || "The number could not be updated.");
-    else setSuccess(true);
+    else {
+      const digits = phone.replace(/\D/g, "");
+      localStorage.setItem("classflow.reminderRegistration", JSON.stringify({
+        email: session.user.email || "",
+        phoneLast4: digits.slice(-4),
+        registeredAt: new Date().toISOString(),
+      }));
+      setSuccess(true);
+    }
     setBusy(false);
   }
 

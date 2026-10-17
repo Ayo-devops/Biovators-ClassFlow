@@ -45,6 +45,8 @@ export async function POST(request) {
     const announcementBody = body.body?.trim();
     const postedBy = body.posted_by?.trim();
     const whatsappGroupId = body.whatsapp_group_id?.trim() || "";
+    const mandatory = body.mandatory === true;
+    const pinned = body.pinned === true;
 
     if (!title || !announcementBody || !postedBy) {
       return Response.json(
@@ -62,7 +64,7 @@ export async function POST(request) {
 
     const { data: announcement, error } = await supabase
       .from("announcements")
-      .insert([{ title, body: announcementBody, posted_by: postedBy }])
+      .insert([{ title, body: announcementBody, posted_by: postedBy, mandatory, pinned }])
       .select()
       .single();
 
