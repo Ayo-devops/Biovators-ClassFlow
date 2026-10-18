@@ -162,7 +162,7 @@ or an explicit class-wide confirmation:
 { "confirmAll": true }
 ```
 
-Trusted automations authenticate with `Authorization: Bearer <REMINDER_API_KEY>`. Admin actions use the signed-in user’s verified Supabase access token instead.
+Trusted external automations can authenticate with `Authorization: Bearer <REMINDER_API_KEY>`. The production OCI worker uses its existing worker credential and triggers the class-wide reminder delivery once each day. Admin actions use the signed-in user’s verified Supabase access token instead.
 
 ## Deployment
 
@@ -170,8 +170,13 @@ The production web application deploys to Vercel from the `main` branch. Configu
 
 The WhatsApp worker remains on OCI because Chromium and `whatsapp-web.js` require a persistent process and authenticated browser session. In production, `WHATSAPP_API_URL` must point to its secure HTTPS endpoint rather than `127.0.0.1`.
 
-The OCI worker calls the protected timetable dispatcher once per minute. The
-dispatcher remains inert until an administrator selects the intended WhatsApp
+The OCI worker calls the protected timetable dispatcher once per minute and
+the protected assignment-reminder dispatcher once each day between 07:00 and
+09:59 Africa/Lagos. A private state file records the date before delivery so a
+worker restart cannot send the same day's batch twice. The external cron job is
+therefore not required in production and should remain disabled.
+
+The timetable dispatcher remains inert until an administrator selects the intended WhatsApp
 group and turns on the master automation switch. Upcoming-class alerts default
 to 10 minutes before the class and can be adjusted in the admin settings.
 
