@@ -212,6 +212,7 @@ async function deliver(context) {
 export async function GET(request) {
   const authorization = await authorizeAdmin(request, {
     allowReminderKey: true,
+    allowWorkerKey: true,
   });
   if (authorization.error) return authorization.error;
   const searchParams = new URL(request.url).searchParams;
@@ -237,6 +238,7 @@ export async function GET(request) {
 export async function POST(request) {
   const authorization = await authorizeAdmin(request, {
     allowReminderKey: true,
+    allowWorkerKey: true,
   });
   if (authorization.error) return authorization.error;
   if (!supabase || !process.env.BREVO_API_KEY) {
