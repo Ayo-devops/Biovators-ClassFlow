@@ -86,6 +86,7 @@ export default function AdminHelpPage() {
   const workspace = useWorkspaceSession();
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(true);
+  const [events, setEvents] = useState([]);
 
   const loadHealth = useCallback(async () => {
     if (!workspace.accessToken) return;
@@ -97,12 +98,20 @@ export default function AdminHelpPage() {
       });
       const data = await response.json();
       setHealth({ ...data, reachable: response.ok });
+      if (workspace.isAdmin) {
+        const eventResponse = await fetch("/api/operations/events", {
+          headers: { Authorization: `Bearer ${workspace.accessToken}` },
+          cache: "no-store",
+        });
+        const eventData = await eventResponse.json();
+        if (eventResponse.ok && Array.isArray(eventData)) setEvents(eventData);
+      }
     } catch {
       setHealth({ connected: false, reachable: false });
     } finally {
       setHealthLoading(false);
     }
-  }, [workspace.accessToken]);
+  }, [workspace.accessToken, workspace.isAdmin]);
 
   useEffect(() => {
     // Health is loaded only after the signed-in workspace session is available.
@@ -138,6 +147,14 @@ export default function AdminHelpPage() {
         </div>
         <button className="button secondary" type="button" onClick={loadHealth} disabled={healthLoading}>Check again</button>
       </section>
+
+      {workspace.isAdmin && <section className="workspace-section operations-history">
+        <div className="section-heading"><div><p className="eyebrow">RECENT SERVICE EVENTS</p><h2>What ClassFlow has noticed</h2><p>Only operational events are recorded—never student messages or conversation text.</p></div></div>
+        {events.length ? <div className="operations-list">{events.slice(0, 8).map((event) => <article key={event.id}>
+          <span className={`operations-dot ${event.severity}`} />
+          <div><strong>{event.message}</strong><small>{new Date(event.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}{event.alert_sent ? " · Alert emailed" : ""}</small></div>
+        </article>)}</div> : <div className="home-inline-empty"><Icon name="check" /><span><strong>No operational problems recorded</strong><small>Warnings and recovery events will appear here.</small></span></div>}
+      </section>}
 
       <section className="workspace-section">
         <div className="section-heading"><div><p className="eyebrow">{audience}</p><h2>Choose what you want to do</h2></div></div>

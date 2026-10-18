@@ -776,6 +776,49 @@
   border-color: #f8fbf5;
   white-space: nowrap;
 }
+.operations-history .section-heading > div > p:last-child {
+  margin-top: 4px;
+  color: #65776c;
+  font-size: 11px;
+}
+.operations-list {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 2px 18px;
+}
+.operations-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.operations-list article:last-child {
+  border-bottom: 0;
+}
+.operations-list strong,
+.operations-list small {
+  display: block;
+}
+.operations-list strong {
+  font-size: 12px;
+}
+.operations-list small {
+  margin-top: 3px;
+  color: #6b7c72;
+  font-size: 10px;
+}
+.operations-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #91a198;
+}
+.operations-dot.warning { background: #d69033; }
+.operations-dot.critical { background: #bd5540; }
 .wide-search {
   display: flex;
   margin-bottom: 16px;
