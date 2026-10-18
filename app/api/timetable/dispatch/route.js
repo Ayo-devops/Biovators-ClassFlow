@@ -143,6 +143,7 @@ async function updateLog(id, values) {
 export async function GET(request) {
   const authorization = await authorizeAdmin(request, {
     allowReminderKey: true,
+    allowWorkerKey: true,
   });
   if (authorization.error) return authorization.error;
   if (!timetableSupabase) return timetableUnavailable();
@@ -157,6 +158,7 @@ export async function GET(request) {
 export async function POST(request) {
   const authorization = await authorizeAdmin(request, {
     allowReminderKey: true,
+    allowWorkerKey: true,
   });
   if (authorization.error) return authorization.error;
   if (!timetableSupabase) return timetableUnavailable();
