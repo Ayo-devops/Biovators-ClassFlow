@@ -23,6 +23,7 @@ export default function Icon({ name = "grid", size = 20 }) {
     slides: "M4 4h16v12H4z M9 21l3-5 3 5 M8 9h8 M8 12h5",
     table: "M4 4h16v16H4z M4 10h16 M10 4v16",
     image: "M4 4h16v16H4z M7 16l4-4 3 3 3-4 3 4 M9 9h.01",
+    chart: "M4 20V10 M10 20V4 M16 20v-7 M22 20H2",
   };
   return (
     <svg

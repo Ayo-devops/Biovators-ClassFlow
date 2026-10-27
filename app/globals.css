@@ -7,6 +7,120 @@
   --border: #e4e9e1;
 }
 
+/* Pilot measurement */
+.pilot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.pilot-panel { padding: 22px; }
+.pilot-panel-heading,
+.pilot-feedback-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.pilot-panel-heading h2 { margin-top: 4px; font-size: 18px; }
+.pilot-panel-heading > span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #edf3e9;
+  color: #456052;
+  font-size: 10px;
+  font-weight: 750;
+}
+.pilot-feature-list { display: grid; margin-top: 17px; }
+.pilot-feature-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  color: #566b5e;
+  font-size: 12px;
+}
+.pilot-feature-list > div:last-child { border-bottom: 0; }
+.pilot-feature-list strong { color: #173f33; }
+.pilot-reach { margin: 18px 0; }
+.pilot-reach > strong { display: block; font-size: 32px; line-height: 1; }
+.pilot-reach > span { display: block; margin-top: 5px; color: #65776c; font-size: 11px; }
+.pilot-reach p { margin-top: 14px; color: #52665a; font-size: 12px; }
+.pilot-settings { border-top: 1px solid var(--border); padding-top: 13px; }
+.pilot-settings summary { min-height: 44px; display: flex; align-items: center; color: #315d46; font-size: 12px; font-weight: 750; cursor: pointer; }
+.pilot-settings form,
+.pilot-feedback-form,
+.pilot-resolution-grid { display: grid; gap: 13px; }
+.pilot-feedback-form .form-row,
+.pilot-settings .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+.pilot-feedback-form .form-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pilot-settings label,
+.pilot-feedback-form label,
+.pilot-resolution-grid label { display: grid; gap: 6px; color: #506747; font-size: 11px; font-weight: 700; }
+.pilot-settings input,
+.pilot-feedback-form input,
+.pilot-feedback-form select,
+.pilot-feedback-form textarea,
+.pilot-resolution-grid input,
+.pilot-resolution-grid select,
+.pilot-resolution-grid textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #dfe5d8;
+  border-radius: 8px;
+  background: #fcfdf9;
+  color: #2e4637;
+  padding: 11px 12px;
+}
+.pilot-feedback-form { margin-top: 15px; padding: 22px; }
+.pilot-feedback-form textarea,
+.pilot-resolution-grid textarea { min-height: 95px; resize: vertical; }
+.pilot-feedback-form .button { justify-self: start; }
+.pilot-feedback-list { display: grid; gap: 13px; margin-top: 16px; }
+.pilot-feedback-card {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+.pilot-feedback-head > div { display: flex; align-items: center; gap: 9px; }
+.pilot-feedback-head strong { font-size: 12px; }
+.pilot-feedback-head small,
+.pilot-feedback-card > small { color: #6a7c70; font-size: 10px; }
+.pilot-feedback-card h3 { margin-top: 12px; font-size: 15px; }
+.pilot-feedback-card > p { margin: 5px 0; color: #53675b; font-size: 12px; }
+.pilot-resolution-grid {
+  grid-template-columns: minmax(130px, 0.8fr) minmax(110px, 0.5fr) minmax(0, 2fr) auto;
+  align-items: end;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+.pilot-resolution-grid .wide { min-width: 0; }
+.pilot-resolution-grid textarea { min-height: 44px; height: 44px; }
+.pilot-privacy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 25px;
+  color: #66796e;
+  font-size: 10px;
+}
+
+@media (max-width: 760px) {
+  .pilot-grid { grid-template-columns: 1fr; }
+  .pilot-feedback-form .form-row,
+  .pilot-settings .form-row,
+  .pilot-resolution-grid { grid-template-columns: 1fr; }
+  .pilot-feedback-form { padding: 18px; }
+  .pilot-resolution-grid .button { width: 100%; justify-content: center; }
+}
+
 /* Student home — compact, task-first and easy to scan */
 .home-greeting {
   display: flex;

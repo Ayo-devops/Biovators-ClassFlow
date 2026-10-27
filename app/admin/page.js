@@ -44,6 +44,7 @@ export default function AdminHomePage() {
   const managementActions = [
     { href: "/admin/help", title: "Help and tutorials", text: "Simple guides for administrators and course representatives.", icon: "book" },
     ...(workspace.isAdmin ? [
+      { href: "/admin/pilot", title: "Pilot insights", text: "Review anonymous usage, feedback and incidents from our first-semester pilot.", icon: "chart" },
       { href: "/admin/students", title: "Students and reminders", text: "View registrations and safely test one-student delivery.", icon: "users" },
       { href: "/admin/timetable", title: "Automated timetable", text: "Manage weekly classes, timing and delivery settings.", icon: "clock" },
       { href: "/admin/test-delivery", title: "Test a delivery", text: "Send an assignment to one selected student only.", icon: "send" },

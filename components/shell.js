@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Icon from "./icon";
 import InstallApp from "./install-app";
 import ConnectionStatus from "./connection-status";
+import PilotTracker from "./pilot-tracker";
 export default function Shell({ children }) {
   const path = usePathname();
   const adminMode = path.startsWith("/admin") && path !== "/admin/login";
@@ -26,6 +27,7 @@ export default function Shell({ children }) {
     link.exact ? path === link.href : path.startsWith(link.href);
   return (
     <div className="app-shell">
+      <PilotTracker enabled={!adminMode && path !== "/admin/login"} />
       <ConnectionStatus />
       <a className="skip-link" href="#main-content">
         Skip to content

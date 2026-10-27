@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Icon from "../../components/icon";
 import { daysUntil, deadlineStatus, formatDate } from "../../lib/deadlines";
+import { trackPilotEvent } from "../../lib/pilot-events";
 
 const DONE_KEY = "classflow.doneAssignments";
 const FILTERS = ["All", "Due soon", "This week", "Overdue", "Done"];
@@ -73,6 +74,7 @@ export default function AssignmentsPage() {
     setDoneIds((current) => {
       const next = current.includes(key) ? current.filter((item) => item !== key) : [...current, key];
       localStorage.setItem(DONE_KEY, JSON.stringify(next));
+      if (!current.includes(key)) trackPilotEvent("assignment_marked_done", "/assignments");
       return next;
     });
   }
@@ -126,7 +128,7 @@ export default function AssignmentsPage() {
                 {group.items.map((item) => {
                   const isDone = doneIds.includes(String(item.id));
                   const status = isDone ? { label: "Done", tone: "green" } : deadlineStatus(item.deadline_date);
-                  return <details className={`assignment ${isDone ? "is-done" : ""}`} id={`assignment-${item.id}`} key={item.id}>
+                  return <details className={`assignment ${isDone ? "is-done" : ""}`} id={`assignment-${item.id}`} key={item.id} onToggle={(event) => event.currentTarget.open && trackPilotEvent("assignment_open", "/assignments")}>
                     <summary><span className="course-dot" style={{ "--course-hue": courseHue(item.course_title) }} /><span className="assignment-title"><span className="course-name">{item.course_title}</span><strong>{item.assignment_title}</strong><span className="assignment-countdown">{isDone ? "Completed on this device" : countdown(item.deadline_date)}</span><span className="assignment-meta"><Icon name="calendar" size={13} />{formatDate(item.deadline_date)}<span>·</span>{item.submission_method}</span></span><span className={`badge ${status.tone}`}><Icon name={isDone ? "check" : "clock"} size={12} />{status.label}</span><span className="expand-mark">+</span></summary>
                     <div className="assignment-details"><p>{item.description || "No additional instructions were added."}</p><div><span><b>Lecturer</b> {item.lecturer_name || "Not specified"}</span><span><b>Priority</b> {item.priority || "Medium"}</span><span><b>Submit via</b> {item.submission_method}</span></div>{item.files?.length > 0 && <div className="assignment-files"><b>Attached files</b>{item.files.map((file) => <a key={file.id} href={file.download_url} target="_blank" rel="noreferrer"><Icon name="download" size={15} />{file.file_name}</a>)}</div>}<button type="button" className={`mark-done-button ${isDone ? "completed" : ""}`} onClick={() => toggleDone(item.id)}><Icon name={isDone ? "arrow" : "check"} size={15} />{isDone ? "Mark as not done" : "Mark done"}</button></div>
                   </details>;

@@ -6,6 +6,7 @@ import Icon from "./icon";
 import { supabase } from "../lib/supabase";
 import { uploadClassFile } from "../lib/upload-class-file";
 import FilePicker from "./file-picker";
+import { trackPilotEvent } from "../lib/pilot-events";
 const configs = {
   register: {
     title: "A little reminder. A lot less worry.",
@@ -252,6 +253,7 @@ export default function ClassForm({ kind }) {
           phoneLast4: digits ? digits.slice(-4) : "",
           registeredAt: new Date().toISOString(),
         }));
+        trackPilotEvent("reminder_registered", "/register");
       }
       setSuccess(true);
     } catch (err) {

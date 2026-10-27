@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Icon from "./icon";
+import { trackPilotEvent } from "../lib/pilot-events";
 export default function InstallApp() {
   const [prompt, setPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
@@ -17,6 +18,7 @@ export default function InstallApp() {
     const done = () => {
       setInstalled(true);
       setPrompt(null);
+      trackPilotEvent("app_installed");
     };
     window.addEventListener("beforeinstallprompt", ready);
     window.addEventListener("appinstalled", done);
@@ -30,6 +32,7 @@ export default function InstallApp() {
     };
   }, []);
   async function install() {
+    trackPilotEvent("app_install_requested");
     if (!prompt) {
       setHelp(!help);
       return;
