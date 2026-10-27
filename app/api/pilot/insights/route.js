@@ -24,7 +24,7 @@ export async function GET(request) {
         .select("id,status,severity,minutes_spent,created_at")
         .order("created_at", { ascending: false }),
       supabase.from("pilot_settings").select("*").eq("id", true).single(),
-      supabase.from("students").select("student_email,whatsapp_number"),
+      supabase.from("students").select("student_email,phone_number"),
     ]);
 
     for (const result of [eventsResult, feedbackResult, settingsResult, studentsResult]) {
@@ -46,7 +46,7 @@ export async function GET(request) {
       reach: {
         registered: students.length,
         email: students.filter((item) => item.student_email).length,
-        whatsapp: students.filter((item) => item.whatsapp_number).length,
+        whatsapp: students.filter((item) => item.phone_number).length,
       },
       feedback: {
         total: feedback.length,
