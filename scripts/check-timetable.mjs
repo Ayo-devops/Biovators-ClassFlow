@@ -58,6 +58,16 @@ assert.match(
   /CANCELLED/,
   "Daily messages keep cancellations visible",
 );
+assert.match(
+  formatDailySchedule("morning", "2026-10-19", cancelled),
+  /☀️ \*TODAY'S CLASS SCHEDULE\*/,
+  "Morning messages use a clear heading",
+);
+assert.match(
+  formatDailySchedule("morning", "2026-10-19", cancelled),
+  /🕒 9:00 AM–10:00 AM\n📝 Lecturer unavailable/,
+  "Daily messages keep class details on separate readable lines",
+);
 assert.equal(formatUpcomingClass(cancelled[0], 10), "");
 
 const venueChanged = resolve("2026-10-19", [
@@ -105,6 +115,17 @@ const added = resolve("2026-10-19", [
 ]);
 assert.equal(added.length, 2);
 assert.equal(added[1].status, "added");
+
+const eveningMessage = formatDailySchedule(
+  "evening",
+  "2026-10-20",
+  movedIn,
+);
+assert.match(eveningMessage, /🌙 \*TOMORROW'S CLASS SCHEDULE\*/);
+assert.match(eveningMessage, /Good evening, Biovators/);
+assert.match(eveningMessage, /\*1\. BME 405 — Bioinformatics\*/);
+assert.match(eveningMessage, /🕒 9:00 AM–11:00 AM\n📍 BME LR2/);
+assert.match(eveningMessage, /\n\n\*2\./, "Classes are separated into blocks");
 
 const upcoming = formatUpcomingClass(entries[0], 10);
 assert.match(upcoming, /Class Starting Soon/);
