@@ -77,10 +77,13 @@ export default function AdminMaterialsPage() {
     finally { setBusy(""); }
   }
 
-  const courses = useMemo(() => Array.from(new Map(items.map((item) => [item.course_code, {
-    code: item.course_code,
-    title: item.course_title,
-  }])).values()).sort((left, right) => left.code.localeCompare(right.code, undefined, { numeric: true })), [items]);
+  const courses = useMemo(() => Array.from(items.reduce((courseMap, item) => {
+    if (!courseMap.has(item.course_code)) courseMap.set(item.course_code, {
+      code: item.course_code,
+      title: item.course_title,
+    });
+    return courseMap;
+  }, new Map()).values()).sort((left, right) => left.code.localeCompare(right.code, undefined, { numeric: true })), [items]);
 
   const groups = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -95,11 +98,15 @@ export default function AdminMaterialsPage() {
     });
     const grouped = new Map();
     for (const item of visible) {
-      const key = `${item.course_code} · ${item.course_title}`;
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key).push(item);
+      if (!grouped.has(item.course_code)) grouped.set(item.course_code, {
+        label: `${item.course_code} · ${item.course_title}`,
+        materials: [],
+      });
+      grouped.get(item.course_code).materials.push(item);
     }
-    return Array.from(grouped.entries()).sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }));
+    return Array.from(grouped.values())
+      .sort((left, right) => left.label.localeCompare(right.label, undefined, { numeric: true }))
+      .map((group) => [group.label, group.materials]);
   }, [items, query, course, sort]);
 
   function chooseExistingCourse(event) {

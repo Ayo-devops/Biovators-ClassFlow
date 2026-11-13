@@ -23,7 +23,7 @@ export async function POST(request) {
     return Response.json({ error: "Complete the course and file details." }, { status: 400 });
   }
   const { data, error } = await filesSupabase.from("course_materials").insert({
-    course_code: body.courseCode.trim(),
+    course_code: body.courseCode.trim().toUpperCase(),
     course_title: body.courseTitle.trim(),
     title: body.title.trim(),
     description: body.description?.trim() || null,
