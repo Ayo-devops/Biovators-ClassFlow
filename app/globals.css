@@ -2687,6 +2687,20 @@ button {
 .timetable-class small { color: #74816e; font-size: 9px; line-height: 1.5; }
 .timetable-class .row-actions { justify-content: flex-start; margin-top: 10px; }
 .timetable-day-empty { padding-top: 14px; color: #829079; font-size: 10px; }
+.public-timetable-panel {
+  padding: 24px;
+}
+.public-timetable-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #526558;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.public-timetable-note svg { flex: 0 0 auto; color: #256449; }
+.public-timetable-panel .timetable-day-heading h2 { font-size: 14px; }
+.timetable-loading { padding: 34px 0; color: #667865; font-size: 12px; }
 .announcement-ticker {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

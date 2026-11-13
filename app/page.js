@@ -103,6 +103,7 @@ export default function HomePage() {
       <nav className="home-stat-chips" aria-label="Quick class overview">
         {loading ? <><span className="home-chip-skeleton" /><span className="home-chip-skeleton" /><span className="home-chip-skeleton" /></> : <>
           <Link href="/assignments?filter=This%20week"><Icon name="clock" size={15} />Due this week <strong>{dueThisWeek}</strong></Link>
+          <Link href="/timetable"><Icon name="calendar" size={15} />View timetable <Icon name="arrow" size={14} /></Link>
           <Link href="/assignments"><Icon name="book" size={15} />All assignments <strong>{assignments.length}</strong></Link>
           <Link href="/announcements"><Icon name="bell" size={15} />Class notices <strong>{announcements.length}</strong></Link>
         </>}
