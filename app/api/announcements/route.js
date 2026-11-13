@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
+import { CLASSFLOW_PUBLIC_URL } from "../../../lib/classflow-links";
 import { authorizeWorkspaceMember } from "../../../lib/admin-auth";
 import {
   listWhatsAppGroups,
@@ -84,7 +85,7 @@ export async function POST(request) {
         } else {
           await sendWhatsAppGroup(
             whatsappGroup.id,
-            `[ClassFlow for Biovators] Announcement\n\n${announcement.title}\n\n${announcement.body}\n\nPosted by: ${announcement.posted_by}\n\n— ClassFlow for Biovators`,
+            `[ClassFlow for Biovators] Announcement\n\n${announcement.title}\n\n${announcement.body}\n\nPosted by: ${announcement.posted_by}\n\nOpen ClassFlow: ${CLASSFLOW_PUBLIC_URL}\n\n— ClassFlow for Biovators`,
           );
         }
       } catch (whatsappError) {

@@ -41,6 +41,8 @@ function uploadedDate(date) {
 export default function MaterialsPage() {
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
+  const [course, setCourse] = useState("all");
+  const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
@@ -59,21 +61,41 @@ export default function MaterialsPage() {
     load();
   }, [load]);
 
+  const courses = useMemo(() => Array.from(new Map(items.map((item) => [item.course_code, {
+    code: item.course_code,
+    title: item.course_title,
+  }])).values()).sort((left, right) => left.code.localeCompare(right.code, undefined, { numeric: true })), [items]);
+
   const groups = useMemo(() => {
-    const visible = items.filter((item) => `${item.course_code} ${item.course_title} ${item.title}`.toLowerCase().includes(query.toLowerCase()));
-    return Object.entries(visible.reduce((grouped, item) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const visible = items.filter((item) => {
+      const matchesCourse = course === "all" || item.course_code === course;
+      const searchText = `${item.course_code} ${item.course_title} ${item.title} ${item.description || ""} ${item.file_name}`.toLowerCase();
+      return matchesCourse && (!normalizedQuery || searchText.includes(normalizedQuery));
+    }).sort((left, right) => {
+      if (sort === "oldest") return new Date(left.created_at) - new Date(right.created_at);
+      if (sort === "title") return left.title.localeCompare(right.title, undefined, { numeric: true });
+      return new Date(right.created_at) - new Date(left.created_at);
+    });
+    const grouped = new Map();
+    for (const item of visible) {
       const key = `${item.course_code} · ${item.course_title}`;
-      grouped[key] = [...(grouped[key] || []), item];
-      return grouped;
-    }, {}));
-  }, [items, query]);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(item);
+    }
+    return Array.from(grouped.entries()).sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }));
+  }, [items, query, course, sort]);
 
   return <>
     <div className="page-heading"><div><h1>Study materials<span>.</span></h1><p>Find notes, slides and files by course.</p></div></div>
     {error && <div className="notice error" role="alert">{error}<button className="text-button" onClick={load}>Try again</button></div>}
     <section className="panel focused-page-panel">
-      <div className="filters page-filters"><label className="search"><Icon name="search" /><input aria-label="Search materials" placeholder="Search by course or material…" value={query} onChange={(event) => setQuery(event.target.value)} /></label></div>
-      {loading ? <div className="skeleton-list"><div className="skeleton" /><div className="skeleton" /></div> : groups.length ? <div className="material-groups">{groups.map(([course, materials]) => <section className="material-course" key={course}><div className="material-course-heading"><h2>{course}</h2><span>{materials.length} file{materials.length === 1 ? "" : "s"}</span></div><div className="material-list">{materials.map((item) => { const [icon, type] = fileDetails(item); return <a key={item.id} href={item.download_url} target="_blank" rel="noreferrer" onClick={() => trackPilotEvent("material_download", "/materials")}><span className={`list-icon material-type ${icon}`}><Icon name={icon} size={18} /></span><span><span className="material-title-line"><strong>{item.title}</strong>{isNew(item.created_at) && <em>New</em>}</span><small>{type} · {fileSize(item.file_size)}{uploadedDate(item.created_at) ? ` · Added ${uploadedDate(item.created_at)}` : ""}</small><small className="material-file-name">{item.file_name}</small></span><Icon name="arrow" size={16} /></a>; })}</div></section>)}</div> : <div className="empty-state"><span className="empty-icon"><Icon name="book" /></span><h3>No materials yet</h3><p>Course files uploaded by our administrators will appear here.</p><Link className="empty-action" href="/assignments">Check assignments <Icon name="arrow" size={15} /></Link></div>}
+      <div className="filters page-filters material-library-filters">
+        <label className="search"><Icon name="search" /><input aria-label="Search materials" placeholder="Search titles or file names…" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+        <select aria-label="Choose a course" value={course} onChange={(event) => setCourse(event.target.value)}><option value="all">All courses ({courses.length})</option>{courses.map((item) => <option value={item.code} key={item.code}>{item.code} · {item.title}</option>)}</select>
+        <select aria-label="Sort materials" value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select>
+      </div>
+      {loading ? <div className="skeleton-list"><div className="skeleton" /><div className="skeleton" /></div> : groups.length ? <div className="material-groups">{groups.map(([courseName, materials]) => <section className="material-course" key={courseName}><div className="material-course-heading"><h2>{courseName}</h2><span>{materials.length} file{materials.length === 1 ? "" : "s"}</span></div><div className="material-list">{materials.map((item) => { const [icon, type] = fileDetails(item); return <a key={item.id} href={item.download_url} target="_blank" rel="noreferrer" onClick={() => trackPilotEvent("material_download", "/materials")}><span className={`list-icon material-type ${icon}`}><Icon name={icon} size={18} /></span><span><span className="material-title-line"><strong>{item.title}</strong>{isNew(item.created_at) && <em>New</em>}</span><small>{type} · {fileSize(item.file_size)}{uploadedDate(item.created_at) ? ` · Added ${uploadedDate(item.created_at)}` : ""}</small>{item.description && <small className="material-description">{item.description}</small>}<small className="material-file-name">{item.file_name}</small></span><Icon name="arrow" size={16} /></a>; })}</div></section>)}</div> : <div className="empty-state"><span className="empty-icon"><Icon name="book" /></span><h3>{items.length ? "No matching materials" : "No materials yet"}</h3><p>{items.length ? "Try another course, search term or sort option." : "Course files uploaded by our administrators will appear here."}</p>{!items.length && <Link className="empty-action" href="/assignments">Check assignments <Icon name="arrow" size={15} /></Link>}</div>}
     </section>
   </>;
 }

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
 import { sendWhatsApp } from "../../../lib/whatsapp-server";
 import { authorizeAdmin } from "../../../lib/admin-auth";
+import { CLASSFLOW_PUBLIC_URL } from "../../../lib/classflow-links";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -78,6 +79,7 @@ function assignmentMessage(assignment, subjectPrefix) {
     `Submission: ${assignment.submission_method}\n` +
     `Priority: ${assignment.priority}` +
     (assignment.description ? `\n\n${assignment.description}` : "") +
+    `\n\nOpen ClassFlow: ${CLASSFLOW_PUBLIC_URL}` +
     `\n\n— ClassFlow for Biovators`
   );
 }

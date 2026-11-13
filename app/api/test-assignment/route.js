@@ -7,6 +7,7 @@ import {
   validateFileDetails,
 } from "../../../lib/class-files-server";
 import { sendWhatsApp } from "../../../lib/whatsapp-server";
+import { CLASSFLOW_PUBLIC_URL } from "../../../lib/classflow-links";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -38,6 +39,7 @@ function messageFor(assignment, attachment) {
     (attachment
       ? `\n\nAttachment: ${attachment.fileName}\n${attachment.downloadUrl}\nThis private link expires in 24 hours.`
       : "") +
+    `\n\nOpen ClassFlow: ${CLASSFLOW_PUBLIC_URL}` +
     "\n\nThis is a private delivery test. It was not published to Biovators.\n\n— ClassFlow for Biovators"
   );
 }

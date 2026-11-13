@@ -55,7 +55,7 @@ async function sendAlert(event) {
       `<p>${escapeHtml(event.message)}</p>` +
       `<p><b>Area:</b> ${escapeHtml(event.event_type.replaceAll("_", " "))}<br>` +
       `<b>Time:</b> ${escapeHtml(new Date().toLocaleString("en-NG", { timeZone: "Africa/Lagos", timeZoneName: "short" }))}</p>` +
-      `<p>Open <a href="https://biovators-class-flow.vercel.app/admin/help">Admin → Help and tutorials</a> to check the current service status.</p>` +
+      `<p>Open <a href="https://biovators.vercel.app/admin/help">Admin → Help and tutorials</a> to check the current service status.</p>` +
       `<p>— ClassFlow for Biovators</p>`,
   });
   return true;

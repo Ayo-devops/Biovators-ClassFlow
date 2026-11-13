@@ -4,7 +4,7 @@
 
 ClassFlow is the shared academic workspace for Biovators. It brings our assignments, deadlines, announcements, reminders, and WhatsApp communication into one calm, mobile-friendly place.
 
-[Open the live app](https://biovators-class-flow.vercel.app)
+[Open the live app](https://biovators.vercel.app)
 
 ## What ClassFlow does
 

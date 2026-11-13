@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Icon from "../../../components/icon";
 import WorkspaceHeading from "../../../components/workspace-heading";
 import { useWorkspaceSession } from "../../../lib/use-workspace-session";
@@ -14,6 +14,9 @@ export default function AdminMaterialsPage() {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [file, setFile] = useState(null);
+  const [query, setQuery] = useState("");
+  const [course, setCourse] = useState("all");
+  const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -74,17 +77,53 @@ export default function AdminMaterialsPage() {
     finally { setBusy(""); }
   }
 
+  const courses = useMemo(() => Array.from(new Map(items.map((item) => [item.course_code, {
+    code: item.course_code,
+    title: item.course_title,
+  }])).values()).sort((left, right) => left.code.localeCompare(right.code, undefined, { numeric: true })), [items]);
+
+  const groups = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const visible = items.filter((item) => {
+      const matchesCourse = course === "all" || item.course_code === course;
+      const searchText = `${item.course_code} ${item.course_title} ${item.title} ${item.description || ""} ${item.file_name}`.toLowerCase();
+      return matchesCourse && (!normalizedQuery || searchText.includes(normalizedQuery));
+    }).sort((left, right) => {
+      if (sort === "oldest") return new Date(left.created_at) - new Date(right.created_at);
+      if (sort === "title") return left.title.localeCompare(right.title, undefined, { numeric: true });
+      return new Date(right.created_at) - new Date(left.created_at);
+    });
+    const grouped = new Map();
+    for (const item of visible) {
+      const key = `${item.course_code} · ${item.course_title}`;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(item);
+    }
+    return Array.from(grouped.entries()).sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }));
+  }, [items, query, course, sort]);
+
+  function chooseExistingCourse(event) {
+    const selected = courses.find((item) => item.code === event.target.value);
+    if (!selected) return;
+    setForm((current) => ({ ...current, courseCode: selected.code, courseTitle: selected.title }));
+  }
+
   return <>
     <WorkspaceHeading eyebrow="ADMIN · MATERIALS" title="Study materials" description="Upload notes and files under the right course." user={workspace.user} role={workspace.role} onSignOut={workspace.signOut} />
     {(workspace.error || error) && <div className="notice error" role="alert">{workspace.error || error}</div>}
     {notice && <div className="notice success" role="status">{notice}</div>}
     {!workspace.loading && workspace.isAdmin && <section className="panel material-upload-panel"><div className="section-heading"><div><p className="eyebrow">ADD A FILE</p><h2>Upload course material</h2><p>PDF, DOCX, PPTX, XLSX and text files can also teach the WhatsApp assistant.</p></div><button type="button" className="button secondary" disabled={Boolean(busy)} onClick={prepareForAi}>{busy === "ai" ? "Preparing…" : "Prepare existing files for AI"}</button></div><form onSubmit={submit}>
+      {courses.length > 0 && <label className="field"><span>Use an existing course</span><select value={courses.some((item) => item.code === form.courseCode) ? form.courseCode : ""} onChange={chooseExistingCourse}><option value="">Choose a saved course or enter a new one below</option>{courses.map((item) => <option value={item.code} key={item.code}>{item.code} · {item.title}</option>)}</select></label>}
       <div className="field-row"><label className="field"><span>Course code</span><input required value={form.courseCode} onChange={(event) => setForm({ ...form, courseCode: event.target.value })} placeholder="BME 411" /></label><label className="field"><span>Course title</span><input required value={form.courseTitle} onChange={(event) => setForm({ ...form, courseTitle: event.target.value })} placeholder="Biomaterials" /></label></div>
       <label className="field"><span>Material title</span><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Week 3 lecture slides" /></label>
       <label className="field"><span>Short description (optional)</span><textarea rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
       <div className="field"><span>File (maximum 20 MB)</span><FilePicker id="material_file" files={file ? [file] : []} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" onChange={(event) => setFile(event.target.files?.[0] || null)} /></div>
       <button className="button primary" disabled={busy === "upload"}>{busy === "upload" ? "Uploading…" : "Upload material"}<Icon name="arrow" size={16} /></button>
     </form></section>}
-    <section className="panel focused-page-panel material-admin-list">{loading ? <div className="skeleton-list"><div className="skeleton" /></div> : items.length ? <div className="management-list">{items.map((item) => <article key={item.id}><span className="list-icon"><Icon name="book" size={18} /></span><div><small>{item.course_code} · {item.course_title}</small><h3>{item.title}</h3><p>{item.file_name}</p></div>{workspace.isAdmin && <button className="button danger" disabled={Boolean(busy)} onClick={() => remove(item)}>{busy === item.id ? "Deleting…" : "Delete"}</button>}</article>)}</div> : <div className="empty-state"><h3>No materials uploaded</h3><p>Use the form above to add the first course file.</p></div>}</section>
+    <section className="panel focused-page-panel material-admin-list">
+      <div className="section-heading material-library-heading"><div><p className="eyebrow">COURSE LIBRARY</p><h2>Uploaded materials</h2><p>{items.length} file{items.length === 1 ? "" : "s"} across {courses.length} course{courses.length === 1 ? "" : "s"}.</p></div></div>
+      <div className="filters page-filters material-library-filters"><label className="search"><Icon name="search" /><input aria-label="Search uploaded materials" placeholder="Search titles or file names…" value={query} onChange={(event) => setQuery(event.target.value)} /></label><select aria-label="Choose a course" value={course} onChange={(event) => setCourse(event.target.value)}><option value="all">All courses</option>{courses.map((item) => <option value={item.code} key={item.code}>{item.code} · {item.title}</option>)}</select><select aria-label="Sort materials" value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select></div>
+      {loading ? <div className="skeleton-list"><div className="skeleton" /></div> : groups.length ? <div className="material-admin-groups">{groups.map(([courseName, materials]) => <section className="material-admin-course" key={courseName}><div className="material-course-heading"><h3>{courseName}</h3><span>{materials.length} file{materials.length === 1 ? "" : "s"}</span></div><div className="management-list">{materials.map((item) => <article key={item.id}><span className="list-icon"><Icon name="book" size={18} /></span><div><h3>{item.title}</h3>{item.description && <p>{item.description}</p>}<small>{item.file_name}</small></div>{workspace.isAdmin && <button className="button danger" disabled={Boolean(busy)} onClick={() => remove(item)}>{busy === item.id ? "Deleting…" : "Delete"}</button>}</article>)}</div></section>)}</div> : <div className="empty-state"><h3>{items.length ? "No matching materials" : "No materials uploaded"}</h3><p>{items.length ? "Try another course or search term." : "Use the form above to add the first course file."}</p></div>}
+    </section>
   </>;
 }

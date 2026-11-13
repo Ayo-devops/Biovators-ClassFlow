@@ -1985,6 +1985,17 @@ button {
   text-transform: uppercase;
 }
 .material-file-name { color: #8a9486 !important; }
+.material-description {
+  color: #526a57 !important;
+  line-height: 1.5;
+}
+.material-library-filters select:first-of-type {
+  width: min(310px, 32vw);
+  max-width: 310px;
+}
+.material-library-filters select:last-of-type {
+  width: 135px;
+}
 .material-type.pdf { background: #fbe9e5; color: #a44f42; }
 .material-type.slides { background: #fff0df; color: #a9632e; }
 .material-type.table { background: #e3f1e5; color: #3e7147; }
@@ -1996,6 +2007,28 @@ button {
 .material-upload-panel form { padding: 0 22px 25px; }
 .material-upload-panel .field > span { color: #506747; font-size: 12px; font-weight: 600; }
 .material-admin-list { margin-top: 0; }
+.material-library-heading {
+  padding-bottom: 10px;
+}
+.material-admin-groups {
+  display: grid;
+  gap: 8px;
+  padding: 0 22px 24px;
+}
+.material-admin-course {
+  padding: 18px 0 8px;
+  border-top: 1px solid var(--border);
+}
+.material-admin-course:first-child {
+  border-top: 0;
+}
+.material-admin-course .material-course-heading h3 {
+  font-size: 15px;
+}
+.material-admin-course .management-list article {
+  padding-right: 0;
+  padding-left: 0;
+}
 @media (min-width: 701px) {
   .focused-page-panel > .wide-search {
     width: calc(100% - 44px);
@@ -3529,6 +3562,11 @@ button {
     width: 100%;
     max-width: none;
     min-height: 46px;
+  }
+  .material-library-filters select:first-of-type,
+  .material-library-filters select:last-of-type {
+    width: 100%;
+    max-width: none;
   }
   .filter-tabs {
     overflow-x: auto;
