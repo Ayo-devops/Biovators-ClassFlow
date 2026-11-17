@@ -178,41 +178,62 @@ function samplePreview() {
 async function deliver(context, { sendGroup = true } = {}) {
   const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   const results = { emails: 0, whatsapp: 0, skipped: 0, failures: [] };
+  const emailJobs = [];
 
   for (const group of context.groups) {
     for (const assignment of group.assignments) {
       for (const student of context.students) {
         if (student.student_email) {
-          try {
-            await brevo.transactionalEmails.sendTransacEmail({
-              sender: {
-                name: "ClassFlow for Biovators",
-                email: "akoredeayomide099@gmail.com",
-              },
-              to: [
-                {
-                  email: student.student_email,
-                  name: student.student_name,
-                },
-              ],
-              subject: `${group.subject} - ${assignment.assignment_title}`,
-              htmlContent: assignmentEmail(assignment, student, group.line),
-            });
-            results.emails += 1;
-          } catch (error) {
-            results.failures.push({
-              studentId: student.id,
-              assignmentId: assignment.id,
-              channel: "email",
-              error: error.message,
-            });
-          }
+          emailJobs.push({ group, assignment, student });
         } else {
           results.skipped += 1;
         }
       }
     }
+  }
 
+  // A small pool keeps Brevo delivery fast enough for the scheduler without
+  // releasing all messages at once.
+  let nextEmailJob = 0;
+  async function sendNextEmail() {
+    while (nextEmailJob < emailJobs.length) {
+      const { group, assignment, student } = emailJobs[nextEmailJob];
+      nextEmailJob += 1;
+      try {
+        await brevo.transactionalEmails.sendTransacEmail({
+          sender: {
+            name: "ClassFlow for Biovators",
+            email: "akoredeayomide099@gmail.com",
+          },
+          to: [
+            {
+              email: student.student_email,
+              name: student.student_name,
+            },
+          ],
+          subject: `${group.subject} - ${assignment.assignment_title}`,
+          htmlContent: assignmentEmail(assignment, student, group.line),
+        });
+        results.emails += 1;
+      } catch (error) {
+        results.failures.push({
+          studentId: student.id,
+          assignmentId: assignment.id,
+          channel: "email",
+          error: error.message,
+        });
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(5, emailJobs.length) },
+      () => sendNextEmail(),
+    ),
+  );
+
+  for (const group of context.groups) {
     // Email remains personal, but WhatsApp reminders are deliberately
     // published once per deadline window instead of once per student.
     if (sendGroup && group.assignments.length) {
