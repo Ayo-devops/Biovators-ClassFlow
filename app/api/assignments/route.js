@@ -1,8 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
-import { sendWhatsApp } from "../../../lib/whatsapp-server";
+import { sendWhatsAppGroup } from "../../../lib/whatsapp-server";
 import { authorizeWorkspaceMember } from "../../../lib/admin-auth";
 import { filesSupabase, signedFiles } from "../../../lib/class-files-server";
+import { CLASSFLOW_PUBLIC_URL } from "../../../lib/classflow-links";
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY
@@ -13,6 +14,8 @@ const supabase =
     : null;
 
 const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+const ASSIGNMENT_REMINDER_GROUP_ID =
+  process.env.ASSIGNMENT_REMINDER_GROUP_ID || "120363353819665592@g.us";
 
 export async function GET() {
   if (!supabase)
@@ -66,8 +69,13 @@ export async function POST(request) {
     if (studentsError)
       return Response.json({ error: studentsError }, { status: 500 });
 
-    for (const student of students) {
-      try {
+    let nextStudent = 0;
+    async function sendNextEmail() {
+      while (nextStudent < students.length) {
+        const student = students[nextStudent];
+        nextStudent += 1;
+        if (!student.student_email) continue;
+
         const emailHtml =
           "<p>Hi " +
           student.student_name +
@@ -100,30 +108,47 @@ export async function POST(request) {
           "<br/>" +
           "<p>— ClassFlow for Biovators</p>";
 
-        await brevo.transactionalEmails.sendTransacEmail({
-          sender: { name: "ClassFlow for Biovators", email: "akoredeayomide099@gmail.com" },
-          to: [{ email: student.student_email, name: student.student_name }],
-          subject:
-            "[ClassFlow] New Assignment - " + assignment.assignment_title,
-          htmlContent: emailHtml,
-        });
-        console.log("Email sent to:", student.student_email);
-
-        await sendWhatsApp(
-          student.phone_number,
-          `[ClassFlow for Biovators] New Assignment\n\n` +
-            `Course: ${assignment.course_title}\n` +
-            `Assignment: ${assignment.assignment_title}\n` +
-            `Lecturer: ${assignment.lecturer_name}\n` +
-            `Deadline: ${assignment.deadline_date}\n` +
-            `Submission: ${assignment.submission_method}\n` +
-            `Priority: ${assignment.priority}` +
-            (assignment.description ? `\n\n${assignment.description}` : "") +
-            `\n\n— ClassFlow for Biovators`,
-        );
-      } catch (emailError) {
-        console.log("Email error:", emailError.message);
+        try {
+          await brevo.transactionalEmails.sendTransacEmail({
+            sender: {
+              name: "ClassFlow for Biovators",
+              email: "akoredeayomide099@gmail.com",
+            },
+            to: [{ email: student.student_email, name: student.student_name }],
+            subject:
+              "[ClassFlow] New Assignment - " + assignment.assignment_title,
+            htmlContent: emailHtml,
+          });
+          console.log("Email sent to:", student.student_email);
+        } catch (emailError) {
+          console.log("Email error:", emailError.message);
+        }
       }
+    }
+
+    await Promise.all(
+      Array.from(
+        { length: Math.min(5, students.length) },
+        () => sendNextEmail(),
+      ),
+    );
+
+    try {
+      await sendWhatsAppGroup(
+        ASSIGNMENT_REMINDER_GROUP_ID,
+        `📝 *New Assignment*\n\n` +
+          `*${assignment.course_title}*\n` +
+          `${assignment.assignment_title}\n\n` +
+          `Lecturer: ${assignment.lecturer_name}\n` +
+          `Deadline: ${assignment.deadline_date}\n` +
+          `Submission: ${assignment.submission_method}\n` +
+          `Priority: ${assignment.priority}` +
+          (assignment.description ? `\n\n${assignment.description}` : "") +
+          `\n\nView assignment: ${CLASSFLOW_PUBLIC_URL}/assignments` +
+          `\n\n_ClassFlow — Biovators, connected._`,
+      );
+    } catch (whatsappError) {
+      console.log("WhatsApp group error:", whatsappError.message);
     }
 
     return Response.json(assignment, { status: 201 });
