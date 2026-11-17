@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { BrevoClient } from "@getbrevo/brevo";
-import { sendWhatsApp } from "../../../lib/whatsapp-server";
+import { sendWhatsAppGroup } from "../../../lib/whatsapp-server";
 import { authorizeAdmin } from "../../../lib/admin-auth";
 import { CLASSFLOW_PUBLIC_URL } from "../../../lib/classflow-links";
 
@@ -11,6 +11,11 @@ const supabase =
         process.env.SUPABASE_SECRET_KEY,
       )
     : null;
+
+const ASSIGNMENT_REMINDER_GROUP_ID =
+  process.env.ASSIGNMENT_REMINDER_GROUP_ID || "120363353819665592@g.us";
+const ASSIGNMENT_REMINDER_GROUP_NAME =
+  process.env.ASSIGNMENT_REMINDER_GROUP_NAME || "400 LVL BME Materials group";
 
 async function loadReminderContext(studentId) {
   const today = new Date();
@@ -69,18 +74,25 @@ async function loadReminderContext(studentId) {
   };
 }
 
-function assignmentMessage(assignment, subjectPrefix) {
+function assignmentGroupMessage(group) {
+  const heading = group.subject.replace("[ClassFlow] ", "");
+  const assignments = group.assignments
+    .map(
+      (assignment, index) =>
+        `${index + 1}. *${assignment.course_title}*\n` +
+        `${assignment.assignment_title}\n` +
+        `Deadline: ${assignment.deadline_date}\n` +
+        `Submission: ${assignment.submission_method}` +
+        (assignment.priority ? `\nPriority: ${assignment.priority}` : ""),
+    )
+    .join("\n\n");
+
   return (
-    `${subjectPrefix}\n\n` +
-    `Course: ${assignment.course_title}\n` +
-    `Assignment: ${assignment.assignment_title}\n` +
-    `Lecturer: ${assignment.lecturer_name}\n` +
-    `Deadline: ${assignment.deadline_date}\n` +
-    `Submission: ${assignment.submission_method}\n` +
-    `Priority: ${assignment.priority}` +
-    (assignment.description ? `\n\n${assignment.description}` : "") +
-    `\n\nOpen ClassFlow: ${CLASSFLOW_PUBLIC_URL}` +
-    `\n\n— ClassFlow for Biovators`
+    `📝 *${heading}*\n\n` +
+    `${group.line}\n\n` +
+    `${assignments}\n\n` +
+    `View assignments: ${CLASSFLOW_PUBLIC_URL}/assignments\n\n` +
+    `_ClassFlow — Biovators, connected._`
   );
 }
 
@@ -112,7 +124,14 @@ function preview(context, studentId) {
     studentId: studentId || null,
     students: context.students.length,
     assignments,
-    deliveries: assignments * context.students.length,
+    deliveries:
+      assignments * context.students.length +
+      (studentId ? 0 : context.groups.filter((group) => group.assignments.length).length),
+    emailDeliveries: assignments * context.students.length,
+    whatsappGroupDeliveries: studentId
+      ? 0
+      : context.groups.filter((group) => group.assignments.length).length,
+    whatsappTarget: studentId ? null : ASSIGNMENT_REMINDER_GROUP_NAME,
     breakdown: {
       today: context.groups[0].assignments.length,
       tomorrow: context.groups[1].assignments.length,
@@ -147,11 +166,16 @@ function samplePreview() {
       subject: `${subject} - ${assignment.assignment_title}`,
       summary: "One reminder email would be prepared for the selected student.",
     },
-    whatsapp: assignmentMessage(assignment, subject),
+    whatsappTarget: ASSIGNMENT_REMINDER_GROUP_NAME,
+    whatsapp: assignmentGroupMessage({
+      subject,
+      line: "This assignment is due in 3 days. Start early.",
+      assignments: [assignment],
+    }),
   };
 }
 
-async function deliver(context) {
+async function deliver(context, { sendGroup = true } = {}) {
   const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   const results = { emails: 0, whatsapp: 0, skipped: 0, failures: [] };
 
@@ -186,25 +210,25 @@ async function deliver(context) {
         } else {
           results.skipped += 1;
         }
+      }
+    }
 
-        if (student.phone_number) {
-          try {
-            await sendWhatsApp(
-              student.phone_number,
-              assignmentMessage(assignment, group.subject),
-            );
-            results.whatsapp += 1;
-          } catch (error) {
-            results.failures.push({
-              studentId: student.id,
-              assignmentId: assignment.id,
-              channel: "whatsapp",
-              error: error.message,
-            });
-          }
-        } else {
-          results.skipped += 1;
-        }
+    // Email remains personal, but WhatsApp reminders are deliberately
+    // published once per deadline window instead of once per student.
+    if (sendGroup && group.assignments.length) {
+      try {
+        await sendWhatsAppGroup(
+          ASSIGNMENT_REMINDER_GROUP_ID,
+          assignmentGroupMessage(group),
+        );
+        results.whatsapp += 1;
+      } catch (error) {
+        results.failures.push({
+          assignmentIds: group.assignments.map((assignment) => assignment.id),
+          channel: "whatsapp_group",
+          groupId: ASSIGNMENT_REMINDER_GROUP_ID,
+          error: error.message,
+        });
       }
     }
   }
@@ -267,7 +291,7 @@ export async function POST(request) {
       return Response.json({ error: "Student not found." }, { status: 404 });
     }
 
-    const results = await deliver(context);
+    const results = await deliver(context, { sendGroup: !studentId });
     return Response.json({
       message: "Reminder delivery completed.",
       ...preview(context, studentId),
